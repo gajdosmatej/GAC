@@ -14,7 +14,6 @@ ofstream impactsFile;
 //FUNCTION DECLARATIONS
 //---------------------
 int symbolToNumber(string symbol);
-bool check(Nucleon * nuc);
 void smallestR(Nucleus * nuc);
 
 //---------------
@@ -39,7 +38,7 @@ Generator::~Generator(){
 }
 
 //generuj z rovnomerneho rozdeleni v intervalu <0 ; 1>
-float Generator::gen(){
+double Generator::gen(){
 
    return gsl_rng_uniform(this->generator);
 
@@ -59,14 +58,14 @@ int Generator::getSeed(){
 }
 
 //generuj z linearniho rozdeleni v intervalu <0 ; maxB>
-float Generator::genLinear(){
+double Generator::genLinear(){
 
   return konst->maxB * sqrt(this->gen());
 
 }
 
 //generuj z rovnomerneho rozdeleni v intervalu <0.5 ; 13.5> (v intervalu velikosti jadra)
-float Generator::genInNuc(){
+double Generator::genInNuc(){
 
     return 2*(konst->nucleusR - konst->nucleonR) * this->gen() + konst->nucleonR;
 
@@ -80,19 +79,26 @@ int Generator::poisson(float M_average){
 }
 
 //ziskej vzdalenost od centra jadra z Wood-Saxonova potencialu
-float Generator::genWoodSaxon(float a, float R0){
+double Generator::genWoodSaxon(float a, float R0){
 
   //normalizacni konstanta
-  float N = 1 / (a * log( exp(R0 / a) + 1) );
+  double N = 1 / (a * log( exp(R0 / a) + 1) );
 
-  float y = -a * log( exp(-this->gen() / (N * a)) - exp( -R0 / a) );
+  double temp = exp(-this->gen() / (N * a));
+  double kon = exp( -R0 / a);
+
+  while(temp <= kon){ temp = exp(-this->gen() / (N * a)); }
+
+  double y = -a * log( temp - kon );
+  //while(isnan(y)){ y = this->genWoodSaxon(a, R0); }
   return y;
 
 }
 
-float Generator::genPosition(float min, float max){
 
-  return this->gen() * (max - min) + min;
+double Generator::genPosition(double min, double max){
+
+  return ( this->gen() * (max - min) + min );
 
 }
 
@@ -103,12 +109,12 @@ float Generator::genPosition(float min, float max){
   //konstruktor Mapy
   Map::Map(){
 
-    this->map = vector< vector< vector< vector<float> > > > (2*konst->nucleusR+1,vector<vector<vector<float>>>(2*konst->nucleusR+1,vector<vector<float>>(2*konst->nucleusR+1,vector<float>(0))));
+    this->map = vector< vector< vector< vector<double> > > > (2*konst->nucleusR+1,vector<vector<vector<double>>>(2*konst->nucleusR+1,vector<vector<double>>(2*konst->nucleusR+1,vector<double>(0))));
 
   }
 
   //zapis do Mapy
-  void Map::writeCoords(float x, float y, float z){
+  void Map::writeCoords(double x, double y, double z){
 
     //nejblizsi uzel
     int roundX = round(x);
@@ -122,7 +128,7 @@ float Generator::genPosition(float min, float max){
   }
 
   //ziskej souradnice z Mapy
-  vector<float> Map::getCoords(int x, int y, int z){
+  vector<double> Map::getCoords(int x, int y, int z){
 
     return this->map[x][y][z];
   }
@@ -132,6 +138,47 @@ float Generator::genPosition(float min, float max){
 
     this->map[x][y][z].erase(this->map[x][y][z].begin() + start, this->map[x][y][z].begin() + start + length);
 
+  }
+
+  //zjisti, jestli Nukleon na pozici x, y, z koliduje s jinym nukleonem
+  bool Map::isColliding(double x, double y, double z){
+
+    int roundX = round(x);
+    int roundY = round(y);
+    int roundZ = round(z);
+
+    if(roundX <= 0){ roundX = 1; } if(roundX >= 2*konst->nucleusR){ roundX = 2*konst->nucleusR - 1; }
+    if(roundY <= 0){ roundY = 1; } if(roundY >= 2*konst->nucleusR){ roundY = 2*konst->nucleusR - 1; }
+    if(roundZ <= 0){ roundZ = 1; } if(roundZ >= 2*konst->nucleusR){ roundZ = 2*konst->nucleusR - 1; }
+
+    //projdi vsechny okolni uzly
+    for(int i = -1; i < 2; ++i){  //x
+      for(int j = -1; j < 2; ++j){  //y
+        for(int k = -1; k < 2; ++k){  //z
+
+          //vsechny souradnice nukleonu v uzlu
+          vector<double> coords = this->getCoords(roundX + i, roundY + j, roundZ + k);
+
+          int size = coords.size();
+          if(size % 3 != 0){ cout << konst->exceptions[3] << endl; }
+          int n = size / 3;  //souradnice jsou vzdy 3 -> pocet nukleonu je delen tremi
+
+          for(int u = 0; u < n; ++u){
+
+            double nearX = coords[3*u];
+            double nearY = coords[3*u+1];
+            double nearZ = coords[3*u+2];
+
+            double r = sqrt( pow(x - nearX, 2) + pow(y - nearY, 2) + pow(z - nearZ, 2) );
+
+            if(r < 1){ return true; }
+
+          }
+        }
+      }
+    }
+
+    return false;
   }
 
 //Class Nucleon
@@ -145,24 +192,14 @@ float Generator::genPosition(float min, float max){
     this->isospin = I;
 
    //vzdalenost od centra
-   float r = generator->genWoodSaxon(konst->a, konst->nucleusR);
+   double r = generator->genWoodSaxon(konst->a, konst->nucleusR);
 
     if(r > konst->nucleusR){r = konst->nucleusR;}
 
-    float one = generator->genPosition(konst->nucleusR - r, konst->nucleusR + r);
-
-    //v jakem rozptylu muze two byt
-    float border = sqrt(r * r - pow(one - konst->nucleusR, 2));
-
-    float two = generator->genPosition(konst->nucleusR - border, konst->nucleusR + border);
-
-    //threeR = three +- konst->nucleusR
-    float threeR = sqrt(r * r - pow(one - konst->nucleusR, 2) - pow(two - konst->nucleusR, 2));
-
-    //na 50% se this->z pricte k konst->nucleusR, na 50% se odecte
-    float unit = generator->gen();
-    if(unit > 0.5){ unit = 1; } else{ unit = -1; }
-    float three = konst->nucleusR + unit * threeR;
+    vector<double> coords = this->makeNewCoords(r);
+    double one = coords[0];
+    double two = coords[1];
+    double three = coords[3];
 
     //nahodne pridel one, two, three k this->x, this->y, this->z
     float rand = generator->gen();
@@ -170,52 +207,78 @@ float Generator::genPosition(float min, float max){
     else if(rand < 0.3333){ this->y = one; this->z = two; this->x = three; }
     else{ this->z = one; this->x = two; this->y = three; }
 
-
-    ofstream file;
-    file.open ("coordinates.txt", ios::app);
-    file << this->x << " " << this->y << " " << this->z << " " << r << endl;
-
-//cout << r << endl;
-
-//cout << this->x << " " << this->y << " " << this->z << endl;
-
-    //STARA GENERACE
-    /*this->x = generator->genInNuc();
-    this->y = generator->genInNuc();
-    this->z = generator->genInNuc();
-    //vzdalenost od stredu jadra
-    float r = sqrt(pow(this->x - konst->nucleusR, 2) + pow(this->y - konst->nucleusR, 2) + pow(this->z - konst->nucleusR, 2));
-
-    //kontrola, jestli neni vzdalenost stredu vetsi nez polomer jadra
-    while(r > (konst->nucleusR - konst->nucleonR)){
-
-      //dokud je, opakuj generaci souradnic
-      this->x = generator->genInNuc();
-      this->y = generator->genInNuc();
-      this->z = generator->genInNuc();
-
-      r = sqrt(pow(x - konst->nucleusR, 2) + pow(y - konst->nucleusR, 2) + pow(z - konst->nucleusR, 2));
-
-    }*/
-    //zjisti, se kterymi Nukleony tento Nukleon koliduje
-    this->collisions();
-
-    //zapis souradnice tohoto Nukleonu do nejblizsiho uzlu Mapy this->parent->map
-    this->parent->map->writeCoords(this->x, this->y, this->z);
-  }
+    //cout << r << endl;
+    //cout << this->x << " " << this->y << " " << this->z << endl;
 
 
-  //zjisti, jestli Nukleon koliduje s nejakym jinym Nukleonem
-  void Nucleon::collisions(){
+    //zjisti, jestli tento Nukleon koliduje
+    int repeat = 0;
 
-    //nevyjde zkouska -> zapise se do pole this->parent->problematic
-    if(!check(this)){
+    while( this->parent->map->isColliding(this->x, this->y, this->z) ){
 
-      this->parent->problematic.push_back(this);
-      this->parent->problematicCounter++;
+      //cout << this->x << " "<< this->y << " " << this->z << " " << r << endl;
+      //cout << "moving..." << endl;
+      //zmen poradi souradnic
+      if(repeat == 0){
 
+        if(rand > 0.6666){ this->x = two; this->y = three; this->z = one; }
+        else if(rand < 0.3333){ this->x = one; this->y = two; this->z = three; }
+        else{ this->y = one; this->z = two; this->x = three; }
+        ++repeat;
+      }
+      //znovu zmen poradi souradnic
+      else if(repeat == 1){
+
+        if(rand > 0.6666){ this->y = one; this->z = two; this->x = three; }
+        else if(rand < 0.3333){ this->x = two; this->y = three; this->z = one; }
+        else{ this->x = one; this->y = two; this->z = three; }
+        ++repeat;
+      }
+      //vytvor nove souradnice; pri prekryvu se priste bude menit poradi souradnic
+      else{
+
+        vector<double> newCoords = this->makeNewCoords(r);
+        one = newCoords[0];
+        two = newCoords[1];
+        three = newCoords[2];
+
+        if(rand > 0.6666){ this->x = one; this->y = two; this->z = three; }
+        else if(rand < 0.3333){ this->y = one; this->z = two; this->x = three; }
+        else{ this->z = one; this->x = two; this->y = three; }
+
+        repeat = 0;
+
+      }
     }
 
+    cout << "OK! new Nucleon" << endl;
+    cout << this->x << " "<< this->y << " " << this->z << " " << r << endl;
+    this->parent->map->writeCoords(this->x, this->y, this->z);
+
+  }
+
+  vector<double> Nucleon::makeNewCoords(double r){
+
+    vector<double> coords(3);
+    cout << "r: " << r << " ";
+    coords[0] = generator->genPosition(konst->nucleusR - r, konst->nucleusR + r);
+    cout << "x: " << coords[0] << " ";
+    //v jakem rozptylu muze two byt
+    double border = sqrt(r * r - pow(coords[0] - konst->nucleusR, 2));
+
+    coords[1] = generator->genPosition(konst->nucleusR - border, konst->nucleusR + border);
+    cout << "y: " << coords[1] << " ";
+    //threeR = three +- konst->nucleusR
+    double threeR = sqrt(r * r - pow(coords[0] - konst->nucleusR, 2) - pow(coords[1] - konst->nucleusR, 2));
+
+cout << "tempZ: " << threeR << " ";
+    //na 50% se this->z pricte k konst->nucleusR, na 50% se odecte
+    double unit = generator->gen();
+    if(unit > 0.5){ unit = 1; } else{ unit = -1; }
+    coords[2] = konst->nucleusR + unit * threeR;
+    cout << "z: " << coords[2] << endl;
+
+    return coords;
 
   }
 
@@ -240,149 +303,8 @@ Nucleus::Nucleus(string symbol, int num){
     this->nucleonNumber(num);
     this->createNucleons();
 
-    //dokud se nejake Nukleony prekryvaji, opakuj jejich posuny
-    while(this->fix()){}
-
 }
 
-//posun Nukleonu v this->problematic
-bool Nucleus::fix(){
-
-/*  cout << this->problematicCounter << endl;
-  cout << this->problematic[0]->x << endl;*/
-
-  vector<float*> forces;  //pole sil na vsechny Nukleony
-  bool moving = false;  //indikuje, jestli doslo k pohybu
-
-  //projed cele pole this->problematic
-  for(int c = 0; c < this->problematicCounter; c++){
-
-    //problematicky Nukleon
-    Nucleon nuc = *(this->problematic[c]);
-
-    //uzel v Mape problematickeho Nukleonu
-    int rX = round(nuc.x);
-    int rY = round(nuc.y);
-    int rZ = round(nuc.z);
-
-    //pokud jsou zaokrouhlene souradnice v krajnich hodnotach, posunou se od nich (jinak dojde k chybe pri procitani okolnich hodnot pole)
-    if(rX == 0){rX++;} if(rX == konst->nucleusR*2){rX--;}
-    if(rY == 0){rY++;} if(rY == konst->nucleusR*2){rY--;}
-    if(rZ == 0){rZ++;} if(rZ == konst->nucleusR*2){rZ--;}
-
-//cout << rX << " " << rY << " " << rZ << endl;
-
-    vector<float> coord;  //souradnice z mapy v uzlu kolem uzlu [rX, rY, rZ]
-    int nucNum; //pocet Nukleonu v coord
-    float * force = new float[3]; //sila, ktera bude pusobit na nuc
-
-    force[0] = 0;
-    force[1] = 0;
-    force[2] = 0;
-
-    //kotrola okolnich uzlu v Mape
-    for(int i = -1; i < 2; i++){
-      for(int j = -1; j < 2; j++){
-        for(int k = -1; k < 2; k++){
-
-
-          coord = this->map->getCoords(rX+i, rY+j, rZ+k);
-
-          nucNum = coord.size() / 3;  //v coord jsou vzdy trojice souradnic -> pocet Nukleonu v uzlu je tretinovy delce pole
-
-          //spocita se vzdalenost r od kazdeho Nukleonu v danem okolnim uzlu
-          for(int m = 0; m < nucNum; m++){
-
-            float r = sqrt(pow(coord[3*m] - nuc.x, 2) + pow(coord[3*m+1] - nuc.y, 2) + pow(coord[3*m+2] - nuc.z, 2));
-
-            //pokud je jejich vzdalenost mensi nez dvojnasobek jejich polomeru, zapocni posun
-            if((r < 2*konst->nucleonR) && (r != 0)){
-
-              moving = true;  //dochazi k pohybovani
-
-              //pricti silu k jiz existujici (pri prekryvu s vice Nukleony)
-              force[0] += (nuc.x - coord[3*m]) / (konst->A * pow(r, 3) + konst->B) + (generator->gen() - 0.5) * 2;
-              force[1] += (nuc.y - coord[3*m+1]) / (konst->A * pow(r, 3) + konst->B)  + (generator->gen() - 0.5) * 2;
-              force[2] += (nuc.x - coord[3*m+2]) / (konst->A * pow(r, 3) + konst->B)  + (generator->gen() - 0.5) * 2;
-
-            }
-          }
-        }
-      }
-    }
-
-    //do pole vsech sil pridej silu na tento Nukleon
-    forces.push_back(force);
-
-  }
-
-  //aplikuj sily
-  for(int c = 0; c < this->problematicCounter; c++){
-
-    float x = this->problematic[c]->x;
-    float y = this->problematic[c]->y;
-    float z = this->problematic[c]->z;
-
-    //souradnice v Mape pred pohybem
-    int xB = round(x);
-    int yB = round(y);
-    int zB = round(z);
-
-    float tempX = x;
-
-    //vypocet novych souradnic po aplikaci sily
-    x += forces[c][0];
-    y += forces[c][1];
-    z += forces[c][2];
-
-    //vzdalenost od stredu jadra
-    float d = sqrt(pow(x - konst->nucleusR, 2) + pow(y - konst->nucleusR, 2) + pow(z - konst->nucleusR, 2));
-
-    //kontrola, jestli pohyb nevyhodi z jadra
-    if(d <= (konst->nucleusR - konst->nucleonR)){
-
-      //aplikace sily
-      this->problematic[c]->x += forces[c][0];
-      this->problematic[c]->y += forces[c][1];
-      this->problematic[c]->z += forces[c][2];
-
-    }
-
-    //smazani pouzite sily z pole vsech sil
-    delete[] forces[c];
-
-    //souradnice v Mape po pohybu
-
-
-    //aktualizace mapy
-
-    int index = 0;
-
-    while(this->map->getCoords(xB, yB, zB)[index] != tempX){index++;} //vyhledani pozice stareho x v mape (->pozice zmeneneho Nukleonu)
-
-    this->map->deleteCoords(xB, yB, zB, index, 3);  //smazani x, y, z posunuteho Nukleonu
-
-    //zapsani novych souradnic do Mapy
-    this->map->writeCoords(this->problematic[c]->x, this->problematic[c]->y, this->problematic[c]->z);
-
-
-  }
-
-  vector<Nucleon*> problematicTemp = this->problematic;
-  int counterTemp = this->problematicCounter;
-
-  this->problematicCounter = 0;
-
-  //zkontroluj vsechny posunute, jestli s necim opet nekoliduji
-  for(int u = 0; u < counterTemp; u++){
-
-    problematicTemp[u]->collisions();
-
-  }
-//cout << moving;
-  //navrat, jestli doslo k pohybu
-  return moving;
-}
 
 //zapis vzdalenosti Nukleonu od jadra do rads.txt (POUZE TESTOVACI)
 void Nucleus::outputRad(){
@@ -550,42 +472,6 @@ void smallestR(Nucleus * n){
 
 }
 
-//zkontroluj, jestli Nukleon nekoliduje (true -> nekoliduje; false -> koliduje)
-bool check(Nucleon * nuc){
-
-  int x = round(nuc->x);
-  int y = round(nuc->y);
-  int z = round(nuc->z);
-
-  if(x == 0){x++;} if(x == 2*konst->nucleusR){x--;}
-  if(y == 0){y++;} if(y == 2*konst->nucleusR){y--;}
-  if(z == 0){z++;} if(z == 2*konst->nucleusR){z--;}
-
-  //blizke uzly k *nuc v Mape
-  for(int i = -1; i < 2; i++){
-    for(int j = -1; j < 2; j++){
-      for(int k = -1; k < 2; k++){
-
-        vector<float> coord = nuc->parent->map->getCoords(x+i, y+j, z+k);
-
-        //pocet Nukleonu v uzlu (kazdy Nukleon zabira 3 pozice pole)
-        int nucNum = coord.size() / 3;
-
-        //zkontroluj vzdalenost s kazdym Nukleonem v danem uzlu
-        for(int m = 0; m < nucNum; m++){
-
-          float r = sqrt(pow(nuc->x - coord[m*3], 2) + pow(nuc->y - coord[m*3+1], 2) + pow(nuc->z - coord[m*3+2], 2));
-
-          //dochazi k prekryvu -> vrat false
-          if(r < 2*konst->nucleonR){
-            return false;
-          }
-        }
-      }
-    }
-  }
-  return true;
-}
 
 //vrat protonove cislo podle znacky
 int symbolToNumber(string symbol){
@@ -683,7 +569,7 @@ void collide(string p1, int n1, string p2, int n2, float R, float b){
 
 	//testovací procedury
 
-  //smallestR(nuc1);
+  smallestR(nuc1);
 	//nuc1->outputNucleons();
   nuc1->outputRad();
 
@@ -721,7 +607,6 @@ float executionTime(string input1, int n1, string input2, int n2, float R){
 
 int main(){
 
-  cout << "brum";
   //initializuj generator a konstanty
   konst = new Constants;
   generator = new Generator;
