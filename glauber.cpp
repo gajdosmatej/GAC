@@ -721,6 +721,8 @@ float executionTime(string input1, int n1, string input2, int n2, float R){
 
 int main(){
 
+  cout << "change in branch" << endl;
+
   //initializuj generator a konstanty
   konst = new Constants;
   generator = new Generator;
