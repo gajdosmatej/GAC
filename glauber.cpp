@@ -86,7 +86,7 @@ double Generator::genNormWoodSaxon(float a, float R0){
   //rejection method
   while(true){
 
-    double x = this->genPosition(0, konst->nucleusR);
+    double x = this->genPosition(0, 10);
     double validator = this->gen();
 
     double y = N * x * x / (1 + exp( (x - R0) / a ));
@@ -126,7 +126,8 @@ double Generator::genPosition(double min, double max){
   //konstruktor Mapy
   Map::Map(){
 
-    this->map = vector< vector< vector< vector<double> > > > (2*konst->nucleusR+1,vector<vector<vector<double>>>(2*konst->nucleusR+1,vector<vector<double>>(2*konst->nucleusR+1,vector<double>(0))));
+    int size = 2*ceil(konst->nucleusR) + 1;
+    this->map = vector< vector< vector< vector<double> > > > (size,vector<vector<vector<double>>>(size,vector<vector<double>>(size,vector<double>(0))));
 
   }
 
@@ -137,6 +138,10 @@ double Generator::genPosition(double min, double max){
     int roundX = round(x);
     int roundY = round(y);
     int roundZ = round(z);
+
+    if(roundX <= 0){ roundX = 1; } if(roundX >= 2*konst->nucleusR){ roundX = 2*ceil(konst->nucleusR) - 1; }
+    if(roundY <= 0){ roundY = 1; } if(roundY >= 2*konst->nucleusR){ roundY = 2*ceil(konst->nucleusR) - 1; }
+    if(roundZ <= 0){ roundZ = 1; } if(roundZ >= 2*konst->nucleusR){ roundZ = 2*ceil(konst->nucleusR) - 1; }
 
     this->map[roundX][roundY][roundZ].push_back(x);
     this->map[roundX][roundY][roundZ].push_back(y);
@@ -164,9 +169,9 @@ double Generator::genPosition(double min, double max){
     int roundY = round(y);
     int roundZ = round(z);
 
-    if(roundX <= 0){ roundX = 1; } if(roundX >= 2*konst->nucleusR){ roundX = 2*konst->nucleusR - 1; }
-    if(roundY <= 0){ roundY = 1; } if(roundY >= 2*konst->nucleusR){ roundY = 2*konst->nucleusR - 1; }
-    if(roundZ <= 0){ roundZ = 1; } if(roundZ >= 2*konst->nucleusR){ roundZ = 2*konst->nucleusR - 1; }
+    if(roundX <= 0){ roundX = 1; } if(roundX >= 2*konst->nucleusR){ roundX = 2*ceil(konst->nucleusR) - 1; }
+    if(roundY <= 0){ roundY = 1; } if(roundY >= 2*konst->nucleusR){ roundY = 2*ceil(konst->nucleusR) - 1; }
+    if(roundZ <= 0){ roundZ = 1; } if(roundZ >= 2*konst->nucleusR){ roundZ = 2*ceil(konst->nucleusR) - 1; }
 
     //projdi vsechny okolni uzly
     for(int i = -1; i < 2; ++i){  //x
@@ -211,7 +216,7 @@ double Generator::genPosition(double min, double max){
    //vzdalenost od centra
    double r = generator->genNormWoodSaxon(konst->a, konst->nucleusR);
 
-    if(r > konst->nucleusR){r = konst->nucleusR;}
+    //if(r > konst->nucleusR){r = konst->nucleusR;} //MELO BY FUNGOVAT I BEZ
 
     vector<double> coords = this->makeNewCoords(r);
     double one = coords[0];
@@ -558,7 +563,7 @@ void collide(string p1, int n1, string p2, int n2, float R, float b){
 
   //multiplicita
   double M_average = epsilon * (impacts * (1 - alpha) / 2 + alpha * nuc1->binImp);
-  float M = generator->poisson(M_average);
+  int M = generator->poisson(M_average);
 
   int NA = 0, NnA = 0, NB = 0, NnB = 0;
 
@@ -585,8 +590,8 @@ void collide(string p1, int n1, string p2, int n2, float R, float b){
 
 	//testovací procedury
   //smallestR(nuc1);
-	//nuc1->outputNucleons();
-  //nuc1->outputRad();
+	nuc1->outputNucleons();
+  nuc1->outputRad();
 
 //smaz Nukleony
   delete nuc1;
