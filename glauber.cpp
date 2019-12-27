@@ -216,16 +216,13 @@ double Generator::genPosition(double min, double max){
     vector<double> coords = this->makeNewCoords(r);
     double one = coords[0];
     double two = coords[1];
-    double three = coords[3];
+    double three = coords[2];
 
     //nahodne pridel one, two, three k this->x, this->y, this->z
     float rand = generator->gen();
     if(rand > 0.6666){ this->x = one; this->y = two; this->z = three; }
     else if(rand < 0.3333){ this->y = one; this->z = two; this->x = three; }
     else{ this->z = one; this->x = two; this->y = three; }
-
-    //cout << r << endl;
-    //cout << this->x << " " << this->y << " " << this->z << endl;
 
 
     //zjisti, jestli tento Nukleon koliduje
@@ -280,24 +277,23 @@ double Generator::genPosition(double min, double max){
   vector<double> Nucleon::makeNewCoords(double r){
 
     vector<double> coords(3);
-    //cout << "r: " << r << " ";
+
     coords[0] = generator->genPosition(konst->nucleusR - r, konst->nucleusR + r);
-    //cout << "x: " << coords[0] << " ";
+
     //v jakem rozptylu muze two byt
     double border = sqrt(r * r - pow(coords[0] - konst->nucleusR, 2));
 
     coords[1] = generator->genPosition(konst->nucleusR - border, konst->nucleusR + border);
-    //cout << "y: " << coords[1] << " ";
+
     //threeR = three +- konst->nucleusR
     double threeR = sqrt(r * r - pow(coords[0] - konst->nucleusR, 2) - pow(coords[1] - konst->nucleusR, 2));
 
-//cout << "tempZ: " << threeR << " ";
     //na 50% se this->z pricte k konst->nucleusR, na 50% se odecte
     double unit = generator->gen();
     if(unit > 0.5){ unit = 1; } else{ unit = -1; }
     coords[2] = konst->nucleusR + unit * threeR;
-    //cout << "z: " << coords[2] << endl;
 
+    //cout << coords[0] << " " << coords[1] << " " << coords[2] << " " << r << endl;}
     return coords;
 
   }
@@ -588,10 +584,9 @@ void collide(string p1, int n1, string p2, int n2, float R, float b){
   nuc1->outputImp(b, impacts, M_average, M, NA, NnA, NB, NnB);  //zapis srazky do impacts.txt
 
 	//testovací procedury
-
   //smallestR(nuc1);
 	//nuc1->outputNucleons();
-  nuc1->outputRad();
+  //nuc1->outputRad();
 
 //smaz Nukleony
   delete nuc1;
