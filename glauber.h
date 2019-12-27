@@ -5,6 +5,7 @@
 #include <iostream>
 #include <gsl/gsl_rng.h>
 #include  <gsl/gsl_randist.h>
+#include <gsl/gsl_sf_fermi_dirac.h>
 #include <fstream>
 
 class Nucleus;
@@ -35,6 +36,7 @@ public:
   double genLinear();  //linearni rozdeleni <0 ; 13>
   double genInNuc(); //rovnomerne rozdeleni <0.5 ; 13.5>
   double genWoodSaxon(float a, float R0);
+  double genNormWoodSaxon(float a, float R0);
   int poisson(float M_average);
   double genPosition(double min, double max); //rovnomerne rozdeleni od min do max
 
