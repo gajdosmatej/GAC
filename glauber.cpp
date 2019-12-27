@@ -78,6 +78,23 @@ int Generator::poisson(float M_average){
 
 }
 
+double Generator::genNormWoodSaxon(float a, float R0){
+
+  double trilogarithm = -gsl_sf_fermi_dirac_2(R0 / a);
+  double N = -1 / (2 * pow(a, 3) * trilogarithm);
+
+  //rejection method
+  while(true){
+
+    double x = this->genPosition(0, konst->nucleusR);
+    double validator = this->gen();
+
+    double y = N * x * x / (1 + exp( (x - R0) / a ));
+    double max = 0.5; //snad se nepresahne... najit maximum funkce vyzaduje Lambertovu W funkci
+    if((y / max) > validator){ return x; } //vhodna hodnota
+  }
+}
+
 //ziskej vzdalenost od centra jadra z Wood-Saxonova potencialu
 double Generator::genWoodSaxon(float a, float R0){
 
@@ -192,7 +209,7 @@ double Generator::genPosition(double min, double max){
     this->isospin = I;
 
    //vzdalenost od centra
-   double r = generator->genWoodSaxon(konst->a, konst->nucleusR);
+   double r = generator->genNormWoodSaxon(konst->a, konst->nucleusR);
 
     if(r > konst->nucleusR){r = konst->nucleusR;}
 
@@ -213,9 +230,12 @@ double Generator::genPosition(double min, double max){
 
     //zjisti, jestli tento Nukleon koliduje
     int repeat = 0;
+    int iterations = 0;
+    int maxIter = 100000;
 
     while( this->parent->map->isColliding(this->x, this->y, this->z) ){
 
+      if(++iterations > maxIter){ r = generator->genNormWoodSaxon(konst->a, konst->nucleusR); } //nelze dlouho polozit -> nove r
       //cout << this->x << " "<< this->y << " " << this->z << " " << r << endl;
       //cout << "moving..." << endl;
       //zmen poradi souradnic
@@ -251,8 +271,8 @@ double Generator::genPosition(double min, double max){
       }
     }
 
-    cout << "OK! new Nucleon" << endl;
-    cout << this->x << " "<< this->y << " " << this->z << " " << r << endl;
+    /*cout << "OK! new Nucleon" << endl;
+    cout << this->x << " "<< this->y << " " << this->z << " " << r << endl;*/
     this->parent->map->writeCoords(this->x, this->y, this->z);
 
   }
@@ -260,23 +280,23 @@ double Generator::genPosition(double min, double max){
   vector<double> Nucleon::makeNewCoords(double r){
 
     vector<double> coords(3);
-    cout << "r: " << r << " ";
+    //cout << "r: " << r << " ";
     coords[0] = generator->genPosition(konst->nucleusR - r, konst->nucleusR + r);
-    cout << "x: " << coords[0] << " ";
+    //cout << "x: " << coords[0] << " ";
     //v jakem rozptylu muze two byt
     double border = sqrt(r * r - pow(coords[0] - konst->nucleusR, 2));
 
     coords[1] = generator->genPosition(konst->nucleusR - border, konst->nucleusR + border);
-    cout << "y: " << coords[1] << " ";
+    //cout << "y: " << coords[1] << " ";
     //threeR = three +- konst->nucleusR
     double threeR = sqrt(r * r - pow(coords[0] - konst->nucleusR, 2) - pow(coords[1] - konst->nucleusR, 2));
 
-cout << "tempZ: " << threeR << " ";
+//cout << "tempZ: " << threeR << " ";
     //na 50% se this->z pricte k konst->nucleusR, na 50% se odecte
     double unit = generator->gen();
     if(unit > 0.5){ unit = 1; } else{ unit = -1; }
     coords[2] = konst->nucleusR + unit * threeR;
-    cout << "z: " << coords[2] << endl;
+    //cout << "z: " << coords[2] << endl;
 
     return coords;
 
@@ -569,7 +589,7 @@ void collide(string p1, int n1, string p2, int n2, float R, float b){
 
 	//testovací procedury
 
-  smallestR(nuc1);
+  //smallestR(nuc1);
 	//nuc1->outputNucleons();
   nuc1->outputRad();
 
@@ -654,7 +674,7 @@ int main(){
   impactsFile.close();
   impactsFile.open("impacts.txt" , ios::app);
 
-  int iter;
+  float iter;
   cout << "Number of iterations: " << endl;
   cin >> iter;
 
@@ -667,6 +687,7 @@ int main(){
 
   //setina poctu iteraci
   int rat = round(iter / 100);
+  if(rat == 0){ ++rat; }
 
   for(int i = 1; i < iter; i++){
 
@@ -681,6 +702,7 @@ int main(){
 
     //vytvor a sraz dve jadra
     collide(input1, n1, input2, n2, R, generator->genLinear());
+
   }
 
   cout << "Done. Results are in impacts.txt" << endl;
