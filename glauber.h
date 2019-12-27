@@ -14,7 +14,7 @@ class Constants{
 
 public:
   const float a = 0.535;  //skin thickness
-  const float nucleusR = 7;   //polomer jadra ve fm
+  const float nucleusR = 6.38;   //polomer jadra ve fm
   const float nucleonR = 0.5;   //polomer jadra ve fm
   const float A = 1.5;  //parametr pro vypocet sily pro opravu prekryvu
   const float B = 10;  //parametr pro vypocet sily pro opravu prekryvu
