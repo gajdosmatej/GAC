@@ -18,7 +18,7 @@ public:
   const float nucleonR = 0.5;   //polomer jadra ve fm
   const float A = 1.5;  //parametr pro vypocet sily pro opravu prekryvu
   const float B = 10;  //parametr pro vypocet sily pro opravu prekryvu
-  const float maxB = 2*nucleusR - 1;  //maximalni srazkovy parametr
+  const float maxB = 2*nucleusR;  //maximalni srazkovy parametr
   const int tableLength = 118;  //pocet prvku v table[]
   const std::string exceptions[4] = {"The element does not exists", "The nucleon number is smaller than proton number", "Input is not a number", "Invalid number of coordinates in Map node (INTERNAL ERROR)"}; //chybove hlasky
   const std::string table[118] = {"H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"};  //periodicka soustava prvku
