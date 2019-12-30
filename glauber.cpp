@@ -555,14 +555,13 @@ void collide(string p1, int n1, string p2, int n2, float R, float b){
     }
   }
 
-  float epsilon = 0.25;
-  float alpha = 0.145;
+  float alpha = 0.11;
 
   //trefene nukleony v obou jadrech
   int impacts = nuc1->imp + nuc2->imp;
 
   //multiplicita
-  double M_average = epsilon * (impacts * (1 - alpha) / 2 + alpha * nuc1->binImp);
+  double M_average = impacts * (1 - alpha) / 2 + alpha * nuc1->binImp;
   int M = generator->poisson(M_average);
 
   int NA = 0, NnA = 0, NB = 0, NnB = 0;
