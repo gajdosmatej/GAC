@@ -338,7 +338,7 @@ void Nucleus::outputRad(){
   for(int i = 0; i < this->Z; i++){
 
       r = sqrt(pow(this->nucleons[i]->x - konst->nucleusR, 2) + pow(this->nucleons[i]->y - konst->nucleusR, 2) + pow(this->nucleons[i]->z - konst->nucleusR, 2));
-      file << r << endl;
+      file << r << "\n";
 
   }
 
@@ -356,7 +356,7 @@ void Nucleus::outputNucleons(){
 
     file << this->nucleons[i]->x << " ";
     file << this->nucleons[i]->y << " ";
-    file << this->nucleons[i]->z << endl;
+    file << this->nucleons[i]->z << "\n";
 
   }
 
@@ -368,7 +368,7 @@ void Nucleus::outputNucleons(){
 void Nucleus::outputImp(float b, float impacts, double M_average, int M, int NA, int NnA, int NB, int NnB){
 
 
-  impactsFile << impacts << " " << this->binImp << " " << b << " " << M_average << " " << M << " " << NA << " " << NnA<< " " << NB << " " << NnB << endl;
+  impactsFile << impacts << " " << this->binImp << " " << b << " " << M_average << " " << M << " " << NA << " " << NnA<< " " << NB << " " << NnB << "\n";
 
 }
 
@@ -392,7 +392,7 @@ void Nucleus::protonNumber(string symbol){
   }
   catch(int e){
 
-    cout << "Error: " << konst->exceptions[e] << endl;
+    cout << "Error: " << konst->exceptions[e] << "\n";
     cout << "Enter symbol again: ";
 
     string sym;
@@ -413,7 +413,7 @@ void Nucleus::nucleonNumber(int input){
 
       cin.clear();
       cin.ignore();
-      cout << "Error: " << konst->exceptions[2] << endl;
+      cout << "Error: " << konst->exceptions[2] << "\n";
       cout << "Enter nucleon number: ";
       cin >> input;
 
@@ -436,7 +436,7 @@ void Nucleus::nucleonNumber(int input){
   }
   catch(int e){
 
-    cout << "Error: " << konst->exceptions[e] << endl;
+    cout << "Error: " << konst->exceptions[e] << "\n";
     Nucleus::nucleonNumber(input);
 
   }
@@ -488,8 +488,8 @@ void smallestR(Nucleus * n){
 
   }
 
-  cout << "Minimal distance: " << min << endl;
-  cout << "Maximal distance: " << max << endl;
+  cout << "Minimal distance: " << min << "\n";
+  cout << "Maximal distance: " << max << "\n";
 
 }
 
@@ -523,7 +523,9 @@ int symbolToNumber(string symbol){
 }
 
 //vytvor a sraz dve jadra (p1 a p2 znacky prvku, n1 a n2 nukleonova cisla, R polomer srazky ziskany z ucinneho prurezu, b srazkovy parametr)
-void collide(string p1, int n1, string p2, int n2, float R, float b){
+void collide(string p1, int n1, string p2, int n2, float R){
+
+  float b = generator->genLinear();
 
   Nucleus * nuc1 = new Nucleus(p1, n1);
   Nucleus * nuc2 = new Nucleus(p2, n2);
@@ -589,8 +591,8 @@ void collide(string p1, int n1, string p2, int n2, float R, float b){
 
 	//testovací procedury
   //smallestR(nuc1);
-	nuc1->outputNucleons();
-  nuc1->outputRad();
+	//nuc1->outputNucleons();
+  //nuc1->outputRad();
 
 //smaz Nukleony
   delete nuc1;
@@ -603,19 +605,19 @@ void collide(string p1, int n1, string p2, int n2, float R, float b){
 float executionTime(string input1, int n1, string input2, int n2, float R){
 
   auto t1 = chrono::high_resolution_clock::now();
-  collide(input1, n1, input2, n2, R, generator->genLinear());
+  collide(input1, n1, input2, n2, R);
   auto t2 = chrono::high_resolution_clock::now();
 
   auto duration1 = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
 
   t1 = chrono::high_resolution_clock::now();
-  collide(input1, n1, input2, n2, R, generator->genLinear());
+  collide(input1, n1, input2, n2, R);
   t2 = chrono::high_resolution_clock::now();
 
   auto duration2 = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
 
   t1 = chrono::high_resolution_clock::now();
-  collide(input1, n1, input2, n2, R, generator->genLinear());
+  collide(input1, n1, input2, n2, R);
   t2 = chrono::high_resolution_clock::now();
 
   auto duration3 = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
@@ -659,7 +661,7 @@ int main(){
   //ziskej polomer z ucinneho prurezu
   float s;
 
-  cout << "Enter cross section [mb]" << endl;
+  cout << "Enter cross section [mb]" << "\n";
   cout << "Sigma = ";
   cin >> s;
 
@@ -669,20 +671,20 @@ int main(){
 
   //vytvor hlavicku obsahujici maximalni mozny pocet srazenych Nukleonu a ucinny prurez v mb
   impactsFile.open("impacts.txt");
-  impactsFile << "nuc = " << n1 + n2 << " sigma = " << 10*s << "mb " << n1 << input1 << " + " << n2 << input2 << endl;
+  impactsFile << "nuc = " << n1 + n2 << " sigma = " << 10*s << "mb " << n1 << input1 << " + " << n2 << input2 << "\n";
   impactsFile.close();
   impactsFile.open("impacts.txt" , ios::app);
 
   float iter;
-  cout << "Number of iterations: " << endl;
+  cout << "Number of iterations: " << "\n";
   cin >> iter;
 
-  cout << "Processing..." << endl;
+  cout << "Processing..." << "\n";
 
 
   //vypocti pribliznou dobu trvani srazeni
-  cout << "Estimated time: " << iter * executionTime(input1, n1, input2, n2, R) / 1000000 << "s" << endl;
-  cout << "---------------------------" << endl;
+  cout << "Estimated time: " << iter * executionTime(input1, n1, input2, n2, R) / 1000000 << "s" << "\n";
+  cout << "---------------------------" << "\n";
 
   //setina poctu iteraci
   int rat = round(iter / 100);
@@ -694,26 +696,26 @@ int main(){
     if((i % rat) == 0){
 
       cout << (i / rat) << "%  ";
-      cout << "Estimated time: " << (iter - i) * executionTime(input1, n1, input2, n2, R) / 1000000 << "s" << endl;
+      cout << "Estimated time: " << (iter - i) * executionTime(input1, n1, input2, n2, R) / 1000000 << "s" << "\n";
       continue;
 
     }
 
     //vytvor a sraz dve jadra
-    collide(input1, n1, input2, n2, R, generator->genLinear());
+    collide(input1, n1, input2, n2, R);
 
   }
 
-  cout << "Done. Results are in impacts.txt" << endl;
-  cout << "First column - nucleons that hit at least one nucleon" << endl;
-  cout << "Second column - number of all impacts" << endl;
-  cout << "Third column - impact parameter" << endl;
-  cout << "Fourth column - average multiplicity" << endl;
-  cout << "Fifth column - multiplicity" << endl;
-  cout << "Sixth column - spectator nucleons from nucleus A" << endl;
-  cout << "Seventh column - spectator neutrons from nucleus A" << endl;
-  cout << "Eighth column - spectator nucleons from nucleus B" << endl;
-  cout << "Nineth column - spectator neutrons from nucleus B" << endl;
+  cout << "Done. Results are in impacts.txt\n";
+  cout << "First column - nucleons that hit at least one nucleon\n";
+  cout << "Second column - number of all impacts\n";
+  cout << "Third column - impact parameter\n";
+  cout << "Fourth column - average multiplicity\n";
+  cout << "Fifth column - multiplicity\n";
+  cout << "Sixth column - spectator nucleons from nucleus A\n";
+  cout << "Seventh column - spectator neutrons from nucleus A\n";
+  cout << "Eighth column - spectator nucleons from nucleus B\n";
+  cout << "Nineth column - spectator neutrons from nucleus B\n";
 
   impactsFile.close();
   delete konst;
