@@ -15,9 +15,7 @@ class Constants{
 public:
   const float a = 0.535;  //skin thickness
   const float nucleusR = 6.38;   //polomer jadra ve fm
-  const float nucleonR = 0.5;   //polomer jadra ve fm
-  const float A = 1.5;  //parametr pro vypocet sily pro opravu prekryvu
-  const float B = 10;  //parametr pro vypocet sily pro opravu prekryvu
+  const float nucleonR = 0.5;   //polomer nukleonu ve fm
   const float maxB = 2*nucleusR;  //maximalni srazkovy parametr
   const int tableLength = 118;  //pocet prvku v table[]
   const std::string exceptions[4] = {"The element does not exists", "The nucleon number is smaller than proton number", "Input is not a number", "Invalid number of coordinates in Map node (INTERNAL ERROR)"}; //chybove hlasky
