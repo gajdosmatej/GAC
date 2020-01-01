@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include "centrality.h"
 using namespace std;
 
 //tento program funguje jako jednotne uzivatelske rozhrani pro programy
@@ -46,7 +47,7 @@ void prepare(int lan){
 
 void centrality(int lan){
 
-
+  centr::centrality(lan);
 
 }
 

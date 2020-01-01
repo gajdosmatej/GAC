@@ -1,19 +1,21 @@
-#include <iostream>
-#include <fstream>
-#include <math.h>
+#include "centrality.h"
 
 using namespace std;
 
-int main(){
+void centr::centrality(int language){
 
   ifstream allFile;
   allFile.open("sorted.txt");
   ofstream centralityFile("centrality.txt");
 
   int min, max;
-  cout << "Min percentage: ";
+
+  if(language == 1) cout << "Dolní hranice procent: ";
+  else  cout << "Min percentage: ";
   cin >> min;
-  cout << "Max percentage: ";
+
+  if(language == 1) cout << "Horní hranice procent: ";
+  else  cout << "Max percentage: ";
   cin >> max;
 
   int size = 0;
@@ -37,5 +39,5 @@ int main(){
   }
 
   centralityFile.close();
-  return 0;
+
 }
