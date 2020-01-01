@@ -1,61 +1,17 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <math.h>
-#include <algorithm>
+#include "sort.h"
 using namespace std;
 
-class intAndString{
 
-public:
-  int M;
-  string line;
 
-  intAndString(int mult, string l){
+  srt::intAndString::intAndString(int mult, string l){
 
     this->M = mult;
     this->line = l;
 
   }
-};
 
 
-/*vector<intAndString*> quickSort(vector<intAndString*> array, int leftBound, int rightBound){
-
-  int pivotIndex = rightBound;
-  int pivot = array[pivotIndex]->M;
-  int leftIndex = leftBound;
-  int rightIndex = rightBound;
-
-  //dokud se indexy neprekroci, opakuj
-  while(leftIndex < rightIndex){
-
-    while((array[leftIndex]->M < pivot) && (leftIndex < rightBound)) ++leftIndex;  //posouvej se doprava, dokud jsou hodnoty mensi nez pivot
-    while((array[rightIndex]->M > pivot) && (rightIndex > leftBound)) --rightIndex;
-
-    //v tuto chvili jsou oba indexy na cislech, ktere jsou na opacne strane pole
-    if(leftIndex < rightIndex){ //kontrola, jestli se indexy neprekrocily
-      //iter_swap(array.begin() + leftIndex, array.begin() + rightIndex); //prohod hodnoty
-      intAndString * temp = array[leftIndex];
-      array[leftIndex] = array[rightIndex];
-      array[rightIndex] = array[leftIndex];
-
-    }
-
-    ++leftIndex;
-    --rightIndex;
-  }
-
-//cout << leftIndex << " " << leftBound << " " << rightIndex << " " << rightBound << "\n";
-  //rekurze
-  if(rightIndex > leftBound)  array = quickSort(array, leftBound, rightIndex);
-  if(leftIndex < rightBound)  array = quickSort(array, leftIndex, rightBound);
-
-  return array;
-
-}*/
-
-int partition(vector<intAndString*> &array, int leftBound, int rightBound){
+int srt::partition(vector<srt::intAndString*> &array, int leftBound, int rightBound){
 
   int pivot = array[rightBound]->M;
 
@@ -80,7 +36,7 @@ int partition(vector<intAndString*> &array, int leftBound, int rightBound){
 
 }
 
-void quickSort(vector<intAndString*> &array, int leftBound, int rightBound){
+void srt::quickSort(vector<srt::intAndString*> &array, int leftBound, int rightBound){
 
   if(leftBound < rightBound){ //overeni
 
@@ -93,7 +49,7 @@ void quickSort(vector<intAndString*> &array, int leftBound, int rightBound){
 
 }
 
-void copyFile(string inputFileName){
+void srt::copyFile(string inputFileName){
 
   ifstream dataFile;
   dataFile.open(inputFileName);
@@ -114,7 +70,7 @@ void copyFile(string inputFileName){
 }
 
 //separuj multiplicitu z celého řádku dat
-int getMultiplicity(string line){
+int srt::getMultiplicity(string line){
 
   const int inRowNumber = 4; //od 0
   for(int i = 0; i < inRowNumber; ++i)  line = line.substr(line.find(" ") + 1);  //odstran sloupce pred multiplicitou
@@ -124,9 +80,9 @@ int getMultiplicity(string line){
 
 }
 
-void sortMultiplicity(){
+void srt::sortMultiplicity(){
 
-    vector<intAndString*> data(0);
+    vector<srt::intAndString*> data(0);
     ifstream sortingFile;
     sortingFile.open("sorted.txt");
     string line;
@@ -134,7 +90,7 @@ void sortMultiplicity(){
     //prepis hodnoty ze sorted.txt do pole
     while(getline(sortingFile, line)){
 
-      data.push_back( new intAndString(getMultiplicity(line), line) );
+      data.push_back( new srt::intAndString(getMultiplicity(line), line) );
 
     }
 
@@ -161,19 +117,20 @@ void sortMultiplicity(){
 }
 
 
-int main(){
+void srt::start(int language){
 
   string dataFileName;
 
-  cout << "Enter data file name: ";
+  if(language == 1) cout << "Název souboru s daty: ";
+  else  cout << "Enter data file name: ";
   cin >> dataFileName;
 
-  cout << "Writing to sorted.txt ..." << endl;
+  if(language == 1) cout << "Kopíruji data do sorted.txt ...\n";
+  else  cout << "Copying data to sorted.txt ...\n";
   copyFile(dataFileName);
 
-  cout << "Sorting sorted.txt ..." << endl;
+  if(language == 1) cout << "Seřazuji sorted.txt ...\n";
+  else  cout << "Sorting sorted.txt ...\n";
   sortMultiplicity();
-
-  return 0;
 
 }

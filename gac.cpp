@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "centrality.h"
+#include "sort.h"
 using namespace std;
 
 //tento program funguje jako jednotne uzivatelske rozhrani pro programy
@@ -42,6 +43,7 @@ void collide(int lan){
 
 void prepare(int lan){
 
+  srt::start(lan);
 
 }
 
@@ -100,7 +102,7 @@ void first(int lan){
 
   if(lan == 1){
 
-    cout << "Vítejte v programu GAC, který simuluje srážky těžkých jader\n";
+    cout << "Vítejte v programu GAC, počítačové simulaci srážek těžkých jader\n";
     cout << "Pro seznam příkazů zadejte !help\n";
     commands(1);
 
