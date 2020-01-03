@@ -7,6 +7,8 @@
 #include  <gsl/gsl_randist.h>
 #include <gsl/gsl_sf_fermi_dirac.h>
 #include <fstream>
+#include <cmath>
+#include <chrono>
 
 class Nucleus;
 
@@ -100,11 +102,19 @@ public:
 private:
 
   void protonNumber(std::string symbol);  //ziskej ze symbolu prvku jeho protonove cislo
-
   void nucleonNumber(int num);   //ziskej ze zadaneho nukleonoveho cisla neutronove cislo, zkontroluj, jestli je this->Z >= this->X
-
   void createNucleons();  //vytvor dany pocet neutronu a protonu (dle this->X a this->N)
+  int symbolToNumber(std::string symbol);  //vrat protonove cislo podle znacky
 
 };
+
+namespace glaub{
+
+  void smallestR(Nucleus * n);  //vrat nejmensi a nejvetsi vzdalenost dvou nukelonu v jadre
+  void collide(std::string p1, int n1, std::string p2, int n2, float R, float alpha);  //vytvor a sraz dve jadra (p1 a p2 znacky prvku, n1 a n2 nukleonova cisla, R polomer srazky ziskany z ucinneho prurezu, b srazkovy parametr, alpha parametr pro vypocet multiplicity)
+  float executionTime(std::string input1, int n1, std::string input2, int n2, float R, float alpha); //priblizna doba vypoctu jedne srazky
+  void start(int languag, bool returnCoords, bool returnRads);
+
+}
 
 #endif

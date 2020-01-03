@@ -2,6 +2,7 @@
 #include <fstream>
 #include "centrality.h"
 #include "sort.h"
+#include "glauber.h"
 using namespace std;
 
 //tento program funguje jako jednotne uzivatelske rozhrani pro programy
@@ -36,7 +37,13 @@ void help(int lan){
 
 }
 
-void collide(int lan){
+void collide(int lan, string input){
+
+  input = input.substr(input.find(" ") + 1);
+  if(input == "-c")  glaub::start(lan, true, false);
+  else if(input == "-r")  glaub::start(lan, false, true);
+  else if((input == "-c -r") || (input == "-r -c")) glaub::start(lan, true, true);
+  else glaub::start(lan, false, false);
 
 
 }
@@ -80,12 +87,12 @@ void commands(int lan){
 
   cout << "> ";
   string input;
-  cin >> input;
+  getline(cin, input);
 
   bool e = false;
 
   if(input == "!help") help(lan);
-  else if(input == "!collide") collide(lan);
+  else if(input.substr(0, 8) == "!collide") collide(lan, input);
   else if(input == "!prepare") prepare(lan);
   else if(input == "!centrality") centrality(lan);
   else if(input == "!exit")  e = true;

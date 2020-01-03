@@ -1,5 +1,3 @@
-#include <cmath>
-#include <chrono>
 #include "glauber.h"
 using namespace std;
 
@@ -9,12 +7,13 @@ using namespace std;
 Generator * generator;
 Constants * konst;
 ofstream impactsFile;
+bool glob_returnRads;
+bool glob_returnCoords;
 
 //---------------------
 //FUNCTION DECLARATIONS
 //---------------------
-int symbolToNumber(string symbol);
-void smallestR(Nucleus * nuc);
+void glaub::smallestR(Nucleus * nuc);
 
 //---------------
 //CLASS FUNCTIONS
@@ -233,13 +232,12 @@ double Generator::genPosition(double min, double max){
     //zjisti, jestli tento Nukleon koliduje
     int repeat = 0;
     int iterations = 0;
-    int maxIter = 100000;
+    int maxIter = 400000;
 
     while( this->parent->map->isColliding(this->x, this->y, this->z) ){
 
       if(++iterations > maxIter){ r = generator->genNormWoodSaxon(konst->a, konst->nucleusR); } //nelze dlouho polozit -> nove r
-      //cout << this->x << " "<< this->y << " " << this->z << " " << r << endl;
-      //cout << "moving..." << endl;
+
       //zmen poradi souradnic
       if(repeat == 0){
 
@@ -372,11 +370,39 @@ void Nucleus::outputImp(float b, float impacts, double M_average, int M, int NA,
 
 }
 
+//vrat protonove cislo podle znacky
+int Nucleus::symbolToNumber(string symbol){
+
+    int i = 0;
+    bool found = false;
+
+    //prohledej periodickou soustavu prvku (pole table)
+    while(i < konst->tableLength){
+
+      if(konst->table[i] == symbol){
+
+        found = true;
+        break;
+
+      }
+      i++;
+
+    }
+
+    if(found){
+      return i + 1; //i starts at zero
+    }
+    else{
+      return 0;
+    }
+
+}
+
 //ziskej protonove cislo
 void Nucleus::protonNumber(string symbol){
 
   try{
-    int output = symbolToNumber(symbol);  //ziskej protonove cislo ze znacky prvku
+    int output = this->symbolToNumber(symbol);  //ziskej protonove cislo ze znacky prvku
 
     //0 -> prvek nebyl nalezen
     if(output != 0){
@@ -466,7 +492,7 @@ void Nucleus::createNucleons(){
 //---------
 
 //projdi vzdalenosti vsech Nukleonu a vypis tu nejmensi a nejvetsi (POUZE TESTOVACI)
-void smallestR(Nucleus * n){
+void glaub::smallestR(Nucleus * n){
 
   int i = 0;
   float min = 100;
@@ -493,37 +519,8 @@ void smallestR(Nucleus * n){
 
 }
 
-
-//vrat protonove cislo podle znacky
-int symbolToNumber(string symbol){
-
-    int i = 0;
-    bool found = false;
-
-    //prohledej periodickou soustavu prvku (pole table)
-    while(i < konst->tableLength){
-
-      if(konst->table[i] == symbol){
-
-        found = true;
-        break;
-
-      }
-      i++;
-
-    }
-
-    if(found){
-      return i + 1; //i starts at zero
-    }
-    else{
-      return 0;
-    }
-
-}
-
 //vytvor a sraz dve jadra (p1 a p2 znacky prvku, n1 a n2 nukleonova cisla, R polomer srazky ziskany z ucinneho prurezu, b srazkovy parametr)
-void collide(string p1, int n1, string p2, int n2, float R){
+void glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
 
   float b = generator->genLinear();
 
@@ -557,7 +554,6 @@ void collide(string p1, int n1, string p2, int n2, float R){
     }
   }
 
-  float alpha = 0.11;
 
   //trefene nukleony v obou jadrech
   int impacts = nuc1->imp + nuc2->imp;
@@ -591,8 +587,8 @@ void collide(string p1, int n1, string p2, int n2, float R){
 
 	//testovací procedury
   //smallestR(nuc1);
-	//nuc1->outputNucleons();
-  //nuc1->outputRad();
+	if(glob_returnCoords)  nuc1->outputNucleons();
+  if(glob_returnRads) nuc1->outputRad();
 
 //smaz Nukleony
   delete nuc1;
@@ -602,31 +598,26 @@ void collide(string p1, int n1, string p2, int n2, float R){
 
 
 //priblizna doba vypoctu jedne srazky [mus]
-float executionTime(string input1, int n1, string input2, int n2, float R){
+float glaub::executionTime(string input1, int n1, string input2, int n2, float R, float alpha){
 
   auto t1 = chrono::high_resolution_clock::now();
-  collide(input1, n1, input2, n2, R);
+  collide(input1, n1, input2, n2, R, alpha);
+  collide(input1, n1, input2, n2, R, alpha);
+  collide(input1, n1, input2, n2, R, alpha);
   auto t2 = chrono::high_resolution_clock::now();
 
   auto duration1 = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
 
-  t1 = chrono::high_resolution_clock::now();
-  collide(input1, n1, input2, n2, R);
-  t2 = chrono::high_resolution_clock::now();
 
-  auto duration2 = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
 
-  t1 = chrono::high_resolution_clock::now();
-  collide(input1, n1, input2, n2, R);
-  t2 = chrono::high_resolution_clock::now();
-
-  auto duration3 = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
-
-  return (duration1 + duration2 + duration3) / 3;
+  return duration1 / 3;
 
 }
 
-int main(){
+void glaub::start(int language, bool returnCoords, bool returnRads){
+
+  glob_returnRads = returnRads;
+  glob_returnCoords = returnCoords;
 
   //initializuj generator a konstanty
   konst = new Constants;
@@ -669,9 +660,13 @@ int main(){
 
   float R = sqrt(s / M_PI);
 
+  cout << "Enter multiplicity parameter alpha: ";
+  float alpha;
+  cin >> alpha;
+
   //vytvor hlavicku obsahujici maximalni mozny pocet srazenych Nukleonu a ucinny prurez v mb
   impactsFile.open("impacts.txt");
-  impactsFile << "nuc = " << n1 + n2 << " sigma = " << 10*s << "mb " << n1 << input1 << " + " << n2 << input2 << "\n";
+  impactsFile << "nuc = " << n1 + n2 << " alpha = " << alpha << " sigma = " << 10*s << "mb " << n1 << input1 << " + " << n2 << input2 << "\n";
   impactsFile.close();
   impactsFile.open("impacts.txt" , ios::app);
 
@@ -683,7 +678,7 @@ int main(){
 
 
   //vypocti pribliznou dobu trvani srazeni
-  cout << "Estimated time: " << iter * executionTime(input1, n1, input2, n2, R) / 1000000 << "s" << "\n";
+  cout << "Estimated time: " << iter * executionTime(input1, n1, input2, n2, R, alpha) / 1000000 << "s" << "\n";
   cout << "---------------------------" << "\n";
 
   //setina poctu iteraci
@@ -696,13 +691,13 @@ int main(){
     if((i % rat) == 0){
 
       cout << (i / rat) << "%  ";
-      cout << "Estimated time: " << (iter - i) * executionTime(input1, n1, input2, n2, R) / 1000000 << "s" << "\n";
+      cout << "Estimated time: " << (iter - i) * executionTime(input1, n1, input2, n2, R, alpha) / 1000000 << "s" << "\n";
       continue;
 
     }
 
     //vytvor a sraz dve jadra
-    collide(input1, n1, input2, n2, R);
+    collide(input1, n1, input2, n2, R, alpha);
 
   }
 
@@ -720,7 +715,5 @@ int main(){
   impactsFile.close();
   delete konst;
   delete generator;
-
-  return 0;
 
 }
