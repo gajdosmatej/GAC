@@ -25,8 +25,8 @@ void centr::centrality(int language){
   allFile.close();
   allFile.open("sorted.txt");
 
-  int minIndex = ceil(size * min / 100);
-  int maxIndex = floor(size * max / 100);
+  int maxIndex = floor(size * (100 - min) / 100);
+  int minIndex = ceil(size * (100 - max) / 100);
 
   centralityFile << min << "-" << max << "%\n";
 
