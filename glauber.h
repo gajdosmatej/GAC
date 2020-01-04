@@ -20,6 +20,7 @@ public:
   int Z1;
   int Z2;
   float sigma;
+  float alpha;
   bool english = false;
   int iter;
 

@@ -21,6 +21,13 @@ void glaub::smallestR(Nucleus * nuc);
 
 //Class UI
 //---------------------------------------------------------------------------------------------
+UI::UI(int language){
+
+  if(language == 1) this->english = false;
+  else  this->english = true;
+
+}
+
 void UI::englishInput(){
 
   cout << "Enter symbol of the first element: ";
@@ -38,6 +45,9 @@ void UI::englishInput(){
   cout << "Enter cross section [mb]" << endl;
   cout << "Sigma = ";
   cin >> this->sigma;
+
+  cout << "Parameter for the calculation of multiplicity alpha: ";
+  cin >> this->alpha;
 
   cout << "Number of iterations: " << endl;
   cin >> this->iter;
@@ -62,6 +72,9 @@ void UI::czechInput(){
   cout << "Účinný průřez [mb]" << endl;
   cout << "Sigma = ";
   cin >> this->sigma;
+
+  cout << "Parametr pro výpočet multiplicity alpha: ";
+  cin >> this->alpha;
 
   cout << "Počet opakování: " << endl;
   cin >> this->iter;
@@ -687,7 +700,9 @@ void glaub::start(int language, bool returnCoords, bool returnRads){
   //initializuj generator a konstanty
   konst = new Constants;
   generator = new Generator;
+  UI * ui = new UI(language);
 
+  //smaz minule zaznamy
   ofstream cord;
   cord.open ("coordinates.txt");
   cord << " ";
@@ -697,88 +712,52 @@ void glaub::start(int language, bool returnCoords, bool returnRads){
   cord << " ";
   cord.close();
 
+  //ziskej vstupni hodnoty
+  if(ui->english){ ui->englishInput(); }else{ ui->czechInput(); }
 
-  string input1;
-  cout << "Enter symbol of the first element: ";
-  cin >> input1;
+  ui->sigma = ui->sigma / 10; //mb -> fm^2
 
-  int n1;
-  cout << "Enter nucleon number: ";
-  cin >> n1;
-
-  string input2;
-  cout << "Enter symbol of the second element: ";
-  cin >> input2;
-
-  int n2;
-  cout << "Enter nucleon number: ";
-  cin >> n2;
-
-  //ziskej polomer z ucinneho prurezu
-  float s;
-
-  cout << "Enter cross section [mb]" << "\n";
-  cout << "Sigma = ";
-  cin >> s;
-
-  s = s / 10; //mb -> fm^2
-
-  float R = sqrt(s / M_PI);
-
-  cout << "Enter multiplicity parameter alpha: ";
-  float alpha;
-  cin >> alpha;
+  //polomer nutny pro srazku z ucinneho prurezu
+  float R = sqrt(ui->sigma / M_PI);
 
   //vytvor hlavicku obsahujici maximalni mozny pocet srazenych Nukleonu a ucinny prurez v mb
   impactsFile.open("impacts.txt");
-  impactsFile << "nuc = " << n1 + n2 << " alpha = " << alpha << " sigma = " << 10*s << "mb " << n1 << input1 << " + " << n2 << input2 << "\n";
+  impactsFile << "nuc = " << ui->Z1 + ui->Z2 << " sigma = " << 10*ui->sigma << "mb " << " alpha = " << ui->alpha << " " << ui->Z1 << ui->element1 << " + " << ui->Z2 << ui->element2 << endl;
   impactsFile.close();
   impactsFile.open("impacts.txt" , ios::app);
 
-  float iter;
-  cout << "Number of iterations: " << "\n";
-  cin >> iter;
-
-  cout << "Processing..." << "\n";
-
 
   //vypocti pribliznou dobu trvani srazeni
-  cout << "Estimated time: " << iter * executionTime(input1, n1, input2, n2, R, alpha) / 1000000 << "s" << "\n";
-  cout << "---------------------------" << "\n";
+  if(ui->english){ ui->englishTime(ui->iter * executionTime(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) / 1000000); }
+  else{ ui->czechTime(ui->iter * executionTime(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) / 1000000); }
+
 
   //setina poctu iteraci
-  int rat = round(iter / 100);
+  int rat = round(ui->iter / 100);
   if(rat == 0){ ++rat; }
 
-  for(int i = 1; i < iter; i++){
+  for(int i = 1; i < ui->iter; i++){
 
     //pokud je nynejsi iterace nasobek rat, vypis tento nasobek jakozto procento a zbyvajici cas
     if((i % rat) == 0){
 
-      cout << (i / rat) << "%  ";
-      cout << "Estimated time: " << (iter - i) * executionTime(input1, n1, input2, n2, R, alpha) / 1000000 << "s" << "\n";
+      if(ui->english){ ui->englishPercent(i / rat, (ui->iter - i) * executionTime(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) / 1000000); }
+      else{ ui->czechPercent(i / rat, (ui->iter - i) * executionTime(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) / 1000000); }
       continue;
 
     }
 
     //vytvor a sraz dve jadra
-    collide(input1, n1, input2, n2, R, alpha);
+    collide(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha);
 
   }
 
-  cout << "Done. Results are in impacts.txt\n";
-  cout << "First column - nucleons that hit at least one nucleon\n";
-  cout << "Second column - number of all impacts\n";
-  cout << "Third column - impact parameter\n";
-  cout << "Fourth column - average multiplicity\n";
-  cout << "Fifth column - multiplicity\n";
-  cout << "Sixth column - spectator nucleons from nucleus A\n";
-  cout << "Seventh column - spectator neutrons from nucleus A\n";
-  cout << "Eighth column - spectator nucleons from nucleus B\n";
-  cout << "Nineth column - spectator neutrons from nucleus B\n";
+  //popisky sloupcu
+  if(ui->english){ ui->englishOutput(); }else{ ui->czechOutput(); }
 
   impactsFile.close();
   delete konst;
   delete generator;
+
 
 }
