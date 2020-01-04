@@ -21,7 +21,7 @@ void help(int lan){
     cout << " !prepare ... Zpracuj data z příkazu !collide pro následné použití v příkazu !centrality\n";
     cout << " !centrality ... Vyfiltruj z dat připravených příkazem !prepare pouze data obsahující multiplicitu v uživatelem daných hranicích\n";
     cout << " !exit ... Opusť program\n";
-    cout << " !language ... Změn jazyk\n";
+    cout << " !language ... Změň jazyk\n";
 
   }
   else{
@@ -89,17 +89,16 @@ void commands(int lan){
   string input;
   getline(cin, input);
 
-  bool e = false;
+  bool exit = false;
 
   if(input == "!help") help(lan);
   else if(input.substr(0, 8) == "!collide") collide(lan, input);
   else if(input == "!prepare") prepare(lan);
   else if(input == "!centrality") centrality(lan);
-  else if(input == "!exit")  e = true;
+  else if(input == "!exit")  exit = true;
   else if(input == "!language"){ lan = abs(lan - 1); setLanguage(lan); }
-  else  cout << "Not valid command\n";
 
-  if(!e){
+  if(!exit){
     commands(lan);
   }
 }
