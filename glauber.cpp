@@ -19,6 +19,114 @@ void glaub::smallestR(Nucleus * nuc);
 //CLASS FUNCTIONS
 //---------------
 
+//Class UI
+//---------------------------------------------------------------------------------------------
+void UI::englishInput(){
+
+  cout << "Enter symbol of the first element: ";
+  cin >> this->element1;
+
+  cout << "Enter nucleon number: ";
+  cin >> this->Z1;
+
+  cout << "Enter symbol of the second element: ";
+  cin >> this->element2;
+
+  cout << "Enter nucleon number: ";
+  cin >> Z2;
+
+  cout << "Enter cross section [mb]" << endl;
+  cout << "Sigma = ";
+  cin >> this->sigma;
+
+  cout << "Number of iterations: " << endl;
+  cin >> this->iter;
+
+  cout << "Processing..." << endl;
+
+}
+void UI::czechInput(){
+
+  cout << "Značka prvku prvního jádra: ";
+  cin >> this->element1;
+
+  cout << "Nukleonové číslo prvního jádra: ";
+  cin >> this->Z1;
+
+  cout << "Značka prvku druhého jádra: ";
+  cin >> this->element2;
+
+  cout << "Nukleonové číslo druhého jádra: ";
+  cin >> Z2;
+
+  cout << "Účinný průřez [mb]" << endl;
+  cout << "Sigma = ";
+  cin >> this->sigma;
+
+  cout << "Počet opakování: " << endl;
+  cin >> this->iter;
+
+  cout << "Počítám..." << endl;
+
+}
+
+void UI::englishTime(float time){
+
+  cout << "Estimated execution time: " << time << "s" << endl;
+  cout << "____________________________________";
+
+}
+
+void UI::czechTime(float time){
+
+  cout << "Předpokládaná doba výpočtu: " << time << "s" << endl;
+  cout << "____________________________________";
+
+}
+
+void UI::englishPercent(int percent, float time){
+
+  cout << percent << "%  ";
+  cout << "Estimated time: " << time << "s" << endl;
+
+}
+
+void UI::czechPercent(int percent, float time){
+
+  cout << percent << "%  ";
+  cout << "Předpokládaný zbývající čas: " << time << "s" << endl;
+
+}
+
+void UI::englishOutput(){
+
+  cout << "Done. Results are in impacts.txt" << endl;
+  cout << "First column - nucleons that hit at least one nucleon" << endl;
+  cout << "Second column - number of all impacts" << endl;
+  cout << "Third column - impact parameter" << endl;
+  cout << "Fourth column - average multiplicity" << endl;
+  cout << "Fifth column - multiplicity" << endl;
+  cout << "Sixth column - spectator nucleons from the first nucleus" << endl;
+  cout << "Seventh column - spectator neutrons from the first nucleus" << endl;
+  cout << "Eighth column - spectator nucleons from the second nucleus" << endl;
+  cout << "Nineth column - spectator neutrons from the second nucleus" << endl;
+
+}
+void UI::czechOutput(){
+
+  cout << "Hotovo. Výsledky jsou v impacts.txt" << endl;
+  cout << "První sloupec - Počet sražených nukleonů" << endl;
+  cout << "Druhý sloupec - Počet všech srážek" << endl;
+  cout << "Třetí sloupec - Parametr srážky [fm]" << endl;
+  cout << "Čtvrtý sloupec - Průměrná multiplicita" << endl;
+  cout << "Pátý sloupec - Multiplicita" << endl;
+  cout << "Šestý sloupec - Spektátoři (nukleony) z prvního jádra" << endl;
+  cout << "Sedmý sloupec - Spektátoři (neutrony) z prvního jádra" << endl;
+  cout << "Osmý sloupec - Spektátoři (nukleony) z druhého jádra" << endl;
+  cout << "Devátý sloupec - Spektátoři (neutrony) z druhého jádra" << endl;
+
+}
+
 //Class generator
 //---------------------------------------------------------------------------------------------
 Generator::Generator(){
