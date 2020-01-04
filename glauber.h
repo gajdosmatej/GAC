@@ -12,6 +12,29 @@
 
 class Nucleus;
 
+class UI{
+
+public:
+  std::string element1;
+  std::string element2;
+  int Z1;
+  int Z2;
+  float sigma;
+  bool english = false;
+  int iter;
+
+  UI(int language);
+  void englishInput();
+  void czechInput();
+  void englishOutput();
+  void czechOutput();
+  void englishTime(float time);
+  void czechTime(float time);
+  void englishPercent(int percent, float time);
+  void czechPercent(int percent, float time);
+
+};
+
 class Constants{
 
 public:
@@ -101,7 +124,6 @@ public:
   void outputImp(float b, float impacts, double M_average, int M, int NA, int NnA, int NB, int NnB); //zapise impacts (soucet srazenych v obou jadrech), this->binImp, b, M_average, M, Na, Nna, Nb, Nnb do impacts.txt
 
 private:
-
   void protonNumber(std::string symbol);  //ziskej ze symbolu prvku jeho protonove cislo
   void nucleonNumber(int num);   //ziskej ze zadaneho nukleonoveho cisla neutronove cislo, zkontroluj, jestli je this->Z >= this->X
   void createNucleons();  //vytvor dany pocet neutronu a protonu (dle this->X a this->N)
