@@ -39,6 +39,7 @@ public:
   double genNormWoodSaxon(float a, float R0);
   int poisson(float M_average);
   double genPosition(double min, double max); //rovnomerne rozdeleni od min do max
+  double genSinus();  //rozdeleni sin(x) / 2
 
 private:
   gsl_rng * generator;
@@ -73,7 +74,7 @@ public:
   bool isImpact = false;  //true => uz se srazil
 
   Nucleon(float I, Nucleus * par, int num); //konstruktor
-  std::vector<double> makeNewCoords(double r);
+  std::vector<double> makeSphericalCoords();
 
 };
 

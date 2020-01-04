@@ -111,6 +111,13 @@ double Generator::genWoodSaxon(float a, float R0){
 
 }
 
+//z rozdeleni sin(x)/2
+double Generator::genSinus(){
+
+  return acos(1 - 2*this->gen());
+
+}
+
 
 double Generator::genPosition(double min, double max){
 
@@ -212,91 +219,41 @@ double Generator::genPosition(double min, double max){
     this->parent = par;
     this->isospin = I;
 
-   //vzdalenost od centra
-   double r = generator->genNormWoodSaxon(konst->a, konst->nucleusR);
+    do{
+    vector<double> coords = this->makeSphericalCoords();
 
-    //if(r > konst->nucleusR){r = konst->nucleusR;} //MELO BY FUNGOVAT I BEZ
+    double r = coords[0];
+    double phi = coords[1];
+    double theta = coords[2];
 
-    vector<double> coords = this->makeNewCoords(r);
-    double one = coords[0];
-    double two = coords[1];
-    double three = coords[2];
+    //nahodne pricti nebo odecti od nucleusR (stred neni v pocatku souradnic)
+    float ranX = generator->gen(); float ranY = generator->gen(); float ranZ = generator->gen();
+    int unitX, unitY, unitZ;
+    if(ranX > 0.5){ unitX = 1;  }else{  unitX = -1; }
+    if(ranY > 0.5){ unitY = 1;  }else{  unitY = -1; }
+    if(ranZ > 0.5){ unitZ = 1;  }else{  unitZ = -1; }
 
-    //nahodne pridel one, two, three k this->x, this->y, this->z
-    float rand = generator->gen();
-    if(rand > 0.6666){ this->x = one; this->y = two; this->z = three; }
-    else if(rand < 0.3333){ this->y = one; this->z = two; this->x = three; }
-    else{ this->z = one; this->x = two; this->y = three; }
+    //transformace
+    this->x = konst->nucleusR + unitX * r * sin(theta) * cos(phi);
+    this->y = konst->nucleusR + unitY * r * sin(theta) * sin(phi);
+    this->z = konst->nucleusR + unitZ * r * cos(theta);
 
-
-    //zjisti, jestli tento Nukleon koliduje
-    int repeat = 0;
-    int iterations = 0;
-    int maxIter = 400000;
-
-    while( this->parent->map->isColliding(this->x, this->y, this->z) ){
-
-      if(++iterations > maxIter){ r = generator->genNormWoodSaxon(konst->a, konst->nucleusR); } //nelze dlouho polozit -> nove r
-
-      //zmen poradi souradnic
-      if(repeat == 0){
-
-        if(rand > 0.6666){ this->x = two; this->y = three; this->z = one; }
-        else if(rand < 0.3333){ this->x = one; this->y = two; this->z = three; }
-        else{ this->y = one; this->z = two; this->x = three; }
-        ++repeat;
-      }
-      //znovu zmen poradi souradnic
-      else if(repeat == 1){
-
-        if(rand > 0.6666){ this->y = one; this->z = two; this->x = three; }
-        else if(rand < 0.3333){ this->x = two; this->y = three; this->z = one; }
-        else{ this->x = one; this->y = two; this->z = three; }
-        ++repeat;
-      }
-      //vytvor nove souradnice; pri prekryvu se priste bude menit poradi souradnic
-      else{
-
-        vector<double> newCoords = this->makeNewCoords(r);
-        one = newCoords[0];
-        two = newCoords[1];
-        three = newCoords[2];
-
-        if(rand > 0.6666){ this->x = one; this->y = two; this->z = three; }
-        else if(rand < 0.3333){ this->y = one; this->z = two; this->x = three; }
-        else{ this->z = one; this->x = two; this->y = three; }
-
-        repeat = 0;
-
-      }
-    }
-
-    /*cout << "OK! new Nucleon" << endl;
-    cout << this->x << " "<< this->y << " " << this->z << " " << r << endl;*/
-    this->parent->map->writeCoords(this->x, this->y, this->z);
+    }//opakuj, pokud potreba
+    while(this->parent->map->isColliding(this->x, this->y, this->z));
 
   }
 
-  vector<double> Nucleon::makeNewCoords(double r){
+
+  vector<double> Nucleon::makeSphericalCoords(){
 
     vector<double> coords(3);
 
-    coords[0] = generator->genPosition(konst->nucleusR - r, konst->nucleusR + r);
+    double r = generator->genNormWoodSaxon(konst->a, konst->nucleusR);
+    double phi = generator->genPosition(0, 2*M_PI);
+    double theta = generator->genSinus();
 
-    //v jakem rozptylu muze two byt
-    double border = sqrt(r * r - pow(coords[0] - konst->nucleusR, 2));
+    coords[0] = r;  coords[1] = phi;  coords[2] = theta;
 
-    coords[1] = generator->genPosition(konst->nucleusR - border, konst->nucleusR + border);
-
-    //threeR = three +- konst->nucleusR
-    double threeR = sqrt(r * r - pow(coords[0] - konst->nucleusR, 2) - pow(coords[1] - konst->nucleusR, 2));
-
-    //na 50% se this->z pricte k konst->nucleusR, na 50% se odecte
-    double unit = generator->gen();
-    if(unit > 0.5){ unit = 1; } else{ unit = -1; }
-    coords[2] = konst->nucleusR + unit * threeR;
-
-    //cout << coords[0] << " " << coords[1] << " " << coords[2] << " " << r << endl;}
     return coords;
 
   }
