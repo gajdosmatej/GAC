@@ -180,7 +180,7 @@ void srt::start(int language){
   if(language == 1) cout << "Seřazuji sorted.txt ...\n";
   else  cout << "Sorting sorted.txt ...\n";
 
-  //sortSpectator();
-  sortMultiplicity();
+  sortSpectator();
+  //sortMultiplicity();
 
 }
