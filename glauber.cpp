@@ -86,14 +86,14 @@ void UI::czechInput(){
 void UI::englishTime(float time){
 
   cout << "Estimated execution time: " << time << "s" << endl;
-  cout << "____________________________________";
+  cout << "____________________________________" << endl;
 
 }
 
 void UI::czechTime(float time){
 
   cout << "Předpokládaná doba výpočtu: " << time << "s" << endl;
-  cout << "____________________________________";
+  cout << "____________________________________" << endl;
 
 }
 
@@ -206,7 +206,7 @@ double Generator::genNormWoodSaxon(float a, float R0){
   //rejection method
   while(true){
 
-    double x = this->genPosition(0, 10);
+    double x = this->genPosition(0, konst->maxR);
     double validator = this->gen();
 
     double y = N * x * x / (1 + exp( (x - R0) / a ));
@@ -598,7 +598,7 @@ void glaub::smallestR(Nucleus * n){
 }
 
 //vytvor a sraz dve jadra (p1 a p2 znacky prvku, n1 a n2 nukleonova cisla, R polomer srazky ziskany z ucinneho prurezu, b srazkovy parametr)
-void glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
+bool glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
 
   float b = generator->genLinear();
 
@@ -640,6 +640,14 @@ void glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
   double M_average = impacts * (1 - alpha) / 2 + alpha * nuc1->binImp;
   int M = generator->poisson(M_average);
 
+  if(M == 0){
+
+    delete nuc1;
+    delete nuc2;
+    return false; //minimum bias
+
+  }
+
   int NA = 0, NnA = 0, NB = 0, NnB = 0;
 
   //spektator nukleony a neutrony v nuc1
@@ -672,6 +680,7 @@ void glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
   delete nuc1;
   delete nuc2;
 
+  return true;
 }
 
 
@@ -748,7 +757,7 @@ void glaub::start(int language, bool returnCoords, bool returnRads){
     }
 
     //vytvor a sraz dve jadra
-    collide(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha);
+    if( !collide(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) )  --i;  //pokud multiplicita nulova, nezapocitej
 
   }
 

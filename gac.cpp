@@ -56,7 +56,7 @@ void prepare(int lan){
 
 void centrality(int lan){
 
-  centr::centrality(lan);
+  centr::start(lan);
 
 }
 

@@ -3,9 +3,9 @@ using namespace std;
 
 
 
-  srt::intAndString::intAndString(int mult, string l){
+  srt::intAndString::intAndString(int sortInteger, string l){
 
-    this->M = mult;
+    this->sortInt = sortInteger;
     this->line = l;
 
   }
@@ -13,13 +13,13 @@ using namespace std;
 
 int srt::partition(vector<srt::intAndString*> &array, int leftBound, int rightBound){
 
-  int pivot = array[rightBound]->M;
+  int pivot = array[rightBound]->sortInt;
 
   int index = leftBound - 1;
   for(int i = leftBound; i < rightBound; ++i){
 
     //i postupuje doprava a kazdou hodnotu mensi nez pivot prohazuje co nejvice doleva
-    if(array[i]->M < pivot){
+    if(array[i]->sortInt < pivot){
 
       //posun index; prohod hodnoty, pokud nejsou shodne
       if(array[++index] != array[i]){
@@ -80,7 +80,55 @@ int srt::getMultiplicity(string line){
 
 }
 
+int srt::getSpectator(string line){
+
+  const int inRowNumber1 = 6; //od 0
+  const int inRowNumber2 = 8;
+
+  for(int i = 0; i < inRowNumber1; ++i)  line = line.substr(line.find(" ") + 1);  //odstran sloupce pred spektatory1
+  int number1 = stoi( line.substr(0, line.find(" ")) ); //odstran sloupce za multiplicitou
+
+  for(int i = inRowNumber1; i < inRowNumber2; ++i)  line = line.substr(line.find(" ") + 1);  //odstran sloupce pred spektatory2
+  int number2 = stoi( line.substr(0, line.find(" ")) );
+
+  return number1 + number2;
+
+}
+
 void srt::sortMultiplicity(){
+
+    vector<srt::intAndString*> data(0);
+    ifstream sortingFile;
+    sortingFile.open("sorted.txt");
+    string line;
+
+    //prepis hodnoty ze sorted.txt do pole
+    while(getline(sortingFile, line))   data.push_back( new srt::intAndString(getMultiplicity(line), line) );
+
+    sortingFile.close();
+
+    //quicksort
+    int length = data.size() - 1;
+    quickSort(data, 0, length);
+
+    //zapis serazena data do sorted.txt
+    ofstream sortingFileW;
+    sortingFileW.open("sorted.txt");
+
+    for(int i = 0; i < length; ++i){
+
+      sortingFileW << data[i]->line << endl;
+
+    }
+
+    sortingFileW.close();
+
+    //smaz data
+    for(int i = 0; i < data.size(); ++i)  delete data[i];
+}
+
+
+void srt::sortSpectator(){
 
     vector<srt::intAndString*> data(0);
     ifstream sortingFile;
@@ -90,7 +138,7 @@ void srt::sortMultiplicity(){
     //prepis hodnoty ze sorted.txt do pole
     while(getline(sortingFile, line)){
 
-      data.push_back( new srt::intAndString(getMultiplicity(line), line) );
+      data.push_back( new srt::intAndString(getSpectator(line), line) );
 
     }
 
@@ -131,6 +179,8 @@ void srt::start(int language){
 
   if(language == 1) cout << "Seřazuji sorted.txt ...\n";
   else  cout << "Sorting sorted.txt ...\n";
+
+  //sortSpectator();
   sortMultiplicity();
 
 }
