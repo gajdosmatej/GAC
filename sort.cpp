@@ -173,6 +173,12 @@ void srt::start(int language){
   else  cout << "Enter data file name: ";
   cin >> dataFileName;
 
+  if(language == 1) cout << "Třídit podle [S]pektátorů, nebo [M]ultiplicity?\n";
+  else cout << "Sort by [S]pectators, or [M]ultiplicity?\n";
+
+  string tech;
+  cin >> tech;
+
   if(language == 1) cout << "Kopíruji data do sorted.txt ...\n";
   else  cout << "Copying data to sorted.txt ...\n";
   copyFile(dataFileName);
@@ -180,7 +186,7 @@ void srt::start(int language){
   if(language == 1) cout << "Seřazuji sorted.txt ...\n";
   else  cout << "Sorting sorted.txt ...\n";
 
-  sortSpectator();
-  //sortMultiplicity();
+  if((tech == "M") || (tech == "m"))  sortMultiplicity();
+  else  sortSpectator();
 
 }

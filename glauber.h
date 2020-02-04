@@ -1,5 +1,6 @@
 #ifndef GLAUBER_H
 #define GLAUBER_H
+#define _USE_MATH_DEFINES
 
 #include <vector>
 #include <iostream>
