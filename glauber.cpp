@@ -30,18 +30,6 @@ UI::UI(int language){
 
 void UI::englishInput(){
 
-  cout << "Enter symbol of the first element: ";
-  cin >> this->element1;
-
-  cout << "Enter nucleon number: ";
-  cin >> this->Z1;
-
-  cout << "Enter symbol of the second element: ";
-  cin >> this->element2;
-
-  cout << "Enter nucleon number: ";
-  cin >> Z2;
-
   cout << "Enter cross section [mb]" << endl;
   cout << "Sigma = ";
   cin >> this->sigma;
@@ -56,18 +44,6 @@ void UI::englishInput(){
 
 }
 void UI::czechInput(){
-
-  cout << "Značka prvku prvního jádra: ";
-  cin >> this->element1;
-
-  cout << "Nukleonové číslo prvního jádra: ";
-  cin >> this->Z1;
-
-  cout << "Značka prvku druhého jádra: ";
-  cin >> this->element2;
-
-  cout << "Nukleonové číslo druhého jádra: ";
-  cin >> Z2;
 
   cout << "Účinný průřez [mb]" << endl;
   cout << "Sigma = ";
@@ -392,12 +368,10 @@ Nucleus::~Nucleus(){
 }
 
 //konstruktor
-Nucleus::Nucleus(string symbol, int num){
+Nucleus::Nucleus(){
 
     this->map = new Map();
 
-    this->protonNumber(symbol);
-    this->nucleonNumber(num);
     this->createNucleons();
 
 }
@@ -411,7 +385,7 @@ void Nucleus::outputRad(){
 
   float r;
 
-  for(int i = 0; i < this->Z; i++){
+  for(int i = 0; i < konst->A; i++){
 
       r = sqrt(pow(this->nucleons[i]->x - konst->nucleusR, 2) + pow(this->nucleons[i]->y - konst->nucleusR, 2) + pow(this->nucleons[i]->z - konst->nucleusR, 2));
       file << r << "\n";
@@ -428,7 +402,7 @@ void Nucleus::outputNucleons(){
   ofstream file;
   file.open ("coordinates.txt", ios::app);
 
-  for(int i = 0; i < this->Z; i++){
+  for(int i = 0; i < konst->A; i++){
 
     file << this->nucleons[i]->x << " ";
     file << this->nucleons[i]->y << " ";
@@ -448,111 +422,12 @@ void Nucleus::outputImp(float b, float impacts, double M_average, int M, int NA,
 
 }
 
-//vrat protonove cislo podle znacky
-int Nucleus::symbolToNumber(string symbol){
-
-    int i = 0;
-    bool found = false;
-
-    //prohledej periodickou soustavu prvku (pole table)
-    while(i < konst->tableLength){
-
-      if(konst->table[i] == symbol){
-
-        found = true;
-        break;
-
-      }
-      i++;
-
-    }
-
-    if(found){
-      return i + 1; //i starts at zero
-    }
-    else{
-      return 0;
-    }
-
-}
-
-//ziskej protonove cislo
-void Nucleus::protonNumber(string symbol){
-
-  try{
-    int output = this->symbolToNumber(symbol);  //ziskej protonove cislo ze znacky prvku
-
-    //0 -> prvek nebyl nalezen
-    if(output != 0){
-
-      this->X = output;
-
-    }
-    else{
-
-      throw 0;
-
-    }
-  }
-  catch(int e){
-
-    cout << "Error: " << konst->exceptions[e] << "\n";
-    cout << "Enter symbol again: ";
-
-    string sym;
-    cin >> sym;
-    protonNumber(sym);   //repeat
-
-  }
-
-}
-
-//proved kontrolu nukleonoveho cisla, zapis
-void Nucleus::nucleonNumber(int input){
-
-  while(true){
-
-    //spatny uzivatelsky vstup
-    if(cin.fail()){
-
-      cin.clear();
-      cin.ignore();
-      cout << "Error: " << konst->exceptions[2] << "\n";
-      cout << "Enter nucleon number: ";
-      cin >> input;
-
-    }
-    else{break;}
-
-  }
-  //zkontroluj, ze Z neni mensi nez X
-  try{
-
-    if( (input - this->X) < 0){
-      throw 1;
-    }
-    else{
-
-      this->Z = input;
-      this->N = this->Z - this->X;
-
-    }
-  }
-  catch(int e){
-
-    cout << "Error: " << konst->exceptions[e] << "\n";
-    Nucleus::nucleonNumber(input);
-
-  }
-
-}
-
 //vytvor Nukleony do jadra
 void Nucleus::createNucleons(){
 
-  for(int i = 0; i < this->Z; i++){
+  for(int i = 0; i < konst->A; i++){
 
-    if(i < this->X){
+    if(i < konst->Z){
       this->nucleons.push_back(new Nucleon(0.5, this, filled));  //pridej Nukleon do pole this->nucleons
     }
     else{
@@ -598,12 +473,12 @@ void glaub::smallestR(Nucleus * n){
 }
 
 //vytvor a sraz dve jadra (p1 a p2 znacky prvku, n1 a n2 nukleonova cisla, R polomer srazky ziskany z ucinneho prurezu, b srazkovy parametr)
-bool glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
+bool glaub::collide(float R, float alpha){
 
   float b = generator->genLinear();
 
-  Nucleus * nuc1 = new Nucleus(p1, n1);
-  Nucleus * nuc2 = new Nucleus(p2, n2);
+  Nucleus * nuc1 = new Nucleus;
+  Nucleus * nuc2 = new Nucleus;
 
   for(int i = 0; i < nuc1->filled; i++){
 
@@ -651,7 +526,7 @@ bool glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
   int NA = 0, NnA = 0, NB = 0, NnB = 0;
 
   //spektator nukleony a neutrony v nuc1
-  for(int j = 0; j < nuc1->Z; j++){
+  for(int j = 0; j < konst->A; j++){
 
     if(!nuc1->nucleons[j]->isImpact){
 
@@ -660,7 +535,7 @@ bool glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
     }
   }
 
-  for(int j = 0; j < nuc2->Z; j++){
+  for(int j = 0; j < konst->A; j++){
 
     if(!nuc2->nucleons[j]->isImpact){
 
@@ -685,12 +560,12 @@ bool glaub::collide(string p1, int n1, string p2, int n2, float R, float alpha){
 
 
 //priblizna doba vypoctu jedne srazky [mus]
-float glaub::executionTime(string input1, int n1, string input2, int n2, float R, float alpha){
+float glaub::executionTime(float R, float alpha){
 
   auto t1 = chrono::high_resolution_clock::now();
-  collide(input1, n1, input2, n2, R, alpha);
-  collide(input1, n1, input2, n2, R, alpha);
-  collide(input1, n1, input2, n2, R, alpha);
+  collide(R, alpha);
+  collide(R, alpha);
+  collide(R, alpha);
   auto t2 = chrono::high_resolution_clock::now();
 
   auto duration1 = chrono::duration_cast<chrono::microseconds>( t2 - t1 ).count();
@@ -731,14 +606,14 @@ void glaub::start(int language, bool returnCoords, bool returnRads){
 
   //vytvor hlavicku obsahujici maximalni mozny pocet srazenych Nukleonu a ucinny prurez v mb
   impactsFile.open("impacts.txt");
-  impactsFile << "nuc = " << ui->Z1 + ui->Z2 << " sigma = " << 10*ui->sigma << "mb " << " alpha = " << ui->alpha << " " << ui->Z1 << ui->element1 << " + " << ui->Z2 << ui->element2 << endl;
+  impactsFile << "nuc = " << 2*konst->A << " sigma = " << 10*ui->sigma << "mb " << " alpha = " << ui->alpha << " " << konst->A << "Au + " << konst->A << "Au" << endl;
   impactsFile.close();
   impactsFile.open("impacts.txt" , ios::app);
 
 
   //vypocti pribliznou dobu trvani srazeni
-  if(ui->english){ ui->englishTime(ui->iter * executionTime(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) / 1000000); }
-  else{ ui->czechTime(ui->iter * executionTime(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) / 1000000); }
+  if(ui->english){ ui->englishTime(ui->iter * executionTime(R, ui->alpha) / 1000000); }
+  else{ ui->czechTime(ui->iter * executionTime(R, ui->alpha) / 1000000); }
 
 
   //setina poctu iteraci
@@ -750,14 +625,14 @@ void glaub::start(int language, bool returnCoords, bool returnRads){
     //pokud je nynejsi iterace nasobek rat, vypis tento nasobek jakozto procento a zbyvajici cas
     if((i % rat) == 0){
 
-      if(ui->english){ ui->englishPercent(i / rat, (ui->iter - i) * executionTime(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) / 1000000); }
-      else{ ui->czechPercent(i / rat, (ui->iter - i) * executionTime(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) / 1000000); }
+      if(ui->english){ ui->englishPercent(i / rat, (ui->iter - i) * executionTime(R, ui->alpha) / 1000000); }
+      else{ ui->czechPercent(i / rat, (ui->iter - i) * executionTime(R, ui->alpha) / 1000000); }
       continue;
 
     }
 
     //vytvor a sraz dve jadra
-    if( !collide(ui->element1, ui->Z1, ui->element2, ui->Z2, R, ui->alpha) )  --i;  //pokud multiplicita nulova, nezapocitej
+    if( !collide(R, ui->alpha) )  --i;  //pokud multiplicita nulova, nezapocitej
 
   }
 

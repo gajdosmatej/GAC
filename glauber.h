@@ -16,10 +16,6 @@ class Nucleus;
 class UI{
 
 public:
-  std::string element1;
-  std::string element2;
-  int Z1;
-  int Z2;
   float sigma;
   float alpha;
   bool english = false;
@@ -44,6 +40,8 @@ public:
   const float nucleusR = 6.38;   //polomer jadra ve fm
   const float nucleonR = 0.5;   //polomer nukleonu ve fm
   const float maxR = 10;
+  const int A = 197;
+  const int Z = 79;
   const float maxB = 2*this->maxR;  //maximalni srazkovy parametr
   const int tableLength = 118;  //pocet prvku v table[]
   const std::string exceptions[4] = {"The element does not exists", "The nucleon number is smaller than proton number", "Input is not a number", "Invalid number of coordinates in Map node (INTERNAL ERROR)"}; //chybove hlasky
@@ -115,11 +113,8 @@ public:
   int problematicCounter = 0;   //pocet problematickych Nukleonu (delka this->problematic)
   int  binImp = 0;  //pocet binarnich srazek
   int imp = 0;    //pocet srazek
-  int X;  //protonove cislo
-  int Z;  //nukleonove cislo
-  int N;  //neutronove cislo
 
-  Nucleus(std::string symbol, int num);  //konstruktor
+  Nucleus();  //konstruktor
   ~Nucleus(); //destruktor
 
   void outputNucleons();  //zapise souradnice Nukleonu v tomto objektu do coordinates.txt (POUZE TESTOVACI METODA)
@@ -127,18 +122,15 @@ public:
   void outputImp(float b, float impacts, double M_average, int M, int NA, int NnA, int NB, int NnB); //zapise impacts (soucet srazenych v obou jadrech), this->binImp, b, M_average, M, Na, Nna, Nb, Nnb do impacts.txt
 
 private:
-  void protonNumber(std::string symbol);  //ziskej ze symbolu prvku jeho protonove cislo
-  void nucleonNumber(int num);   //ziskej ze zadaneho nukleonoveho cisla neutronove cislo, zkontroluj, jestli je this->Z >= this->X
   void createNucleons();  //vytvor dany pocet neutronu a protonu (dle this->X a this->N)
-  int symbolToNumber(std::string symbol);  //vrat protonove cislo podle znacky
 
 };
 
 namespace glaub{
 
   void smallestR(Nucleus * n);  //vrat nejmensi a nejvetsi vzdalenost dvou nukelonu v jadre
-  bool collide(std::string p1, int n1, std::string p2, int n2, float R, float alpha);  //vytvor a sraz dve jadra (p1 a p2 znacky prvku, n1 a n2 nukleonova cisla, R polomer srazky ziskany z ucinneho prurezu, b srazkovy parametr, alpha parametr pro vypocet multiplicity)
-  float executionTime(std::string input1, int n1, std::string input2, int n2, float R, float alpha); //priblizna doba vypoctu jedne srazky
+  bool collide(float R, float alpha);  //vytvor a sraz dve jadra (p1 a p2 znacky prvku, n1 a n2 nukleonova cisla, R polomer srazky ziskany z ucinneho prurezu, b srazkovy parametr, alpha parametr pro vypocet multiplicity)
+  float executionTime(float R, float alpha); //priblizna doba vypoctu jedne srazky
   void start(int languag, bool returnCoords, bool returnRads);
 
 }
