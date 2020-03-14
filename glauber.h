@@ -96,6 +96,7 @@ public:
   float isospin;  // 1/2 => proton; -1/2 => neutron
   Nucleus * parent; //Nucleus obsahujici tento Nucleon
   bool isImpact = false;  //true => uz se srazil
+  int binImp = 0;
 
   Nucleon(float I, Nucleus * par, int num); //konstruktor
   std::vector<double> makeSphericalCoords();
@@ -117,9 +118,11 @@ public:
   Nucleus();  //konstruktor
   ~Nucleus(); //destruktor
 
+  int getBin(float x, float y);
+  float excentricity();
   void outputNucleons();  //zapise souradnice Nukleonu v tomto objektu do coordinates.txt (POUZE TESTOVACI METODA)
   void outputRad();  //zapise souradnice Nukleonu od stredu tohoto objektu do rads.txt (POUZE TESTOVACI METODA)
-  void outputImp(float b, float impacts, double M_average, int M, int NA, int NnA, int NB, int NnB); //zapise impacts (soucet srazenych v obou jadrech), this->binImp, b, M_average, M, Na, Nna, Nb, Nnb do impacts.txt
+  void outputImp(float b, float impacts, double M_average, int M, int NA, int NnA, int NB, int NnB, float excentricity); //zapise impacts (soucet srazenych v obou jadrech), this->binImp, b, M_average, M, Na, Nna, Nb, Nnb do impacts.txt
 
 private:
   void createNucleons();  //vytvor dany pocet neutronu a protonu (dle this->X a this->N)
@@ -128,6 +131,8 @@ private:
 
 namespace glaub{
 
+  template<typename T>
+  float integral(T&& lambda, float low, float high, int iterations);
   void smallestR(Nucleus * n);  //vrat nejmensi a nejvetsi vzdalenost dvou nukelonu v jadre
   bool collide(float R, float alpha);  //vytvor a sraz dve jadra (p1 a p2 znacky prvku, n1 a n2 nukleonova cisla, R polomer srazky ziskany z ucinneho prurezu, b srazkovy parametr, alpha parametr pro vypocet multiplicity)
   float executionTime(float R, float alpha); //priblizna doba vypoctu jedne srazky

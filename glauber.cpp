@@ -99,6 +99,7 @@ void UI::englishOutput(){
   cout << "Seventh column - spectator neutrons from the first nucleus" << endl;
   cout << "Eighth column - spectator nucleons from the second nucleus" << endl;
   cout << "Nineth column - spectator neutrons from the second nucleus" << endl;
+  cout << "Tenth column - excentricity" << endl;
 
 }
 void UI::czechOutput(){
@@ -113,6 +114,7 @@ void UI::czechOutput(){
   cout << "Sedmý sloupec - Spektátoři (neutrony) z prvního jádra" << endl;
   cout << "Osmý sloupec - Spektátoři (nukleony) z druhého jádra" << endl;
   cout << "Devátý sloupec - Spektátoři (neutrony) z druhého jádra" << endl;
+  cout << "Desátý sloupec - Excentricita" << endl;
 
 }
 
@@ -376,6 +378,37 @@ Nucleus::Nucleus(){
 
 }
 
+int Nucleus::getBin(float x, float y){
+
+  int bin = 0;
+
+  for(int i = 0; i < this->filled; ++i){
+
+    Nucleon * nucleon = this->nucleons[i];
+    float r = sqrt( pow(nucleon->x - x, 2) + pow(nucleon->y - y, 2) );
+
+    if(r < konst->nucleonR){  bin += nucleon->binImp; }
+
+  }
+
+  return bin;
+}
+
+float Nucleus::excentricity(){
+
+  float lowBound = konst->nucleusR - konst->maxR;
+  float highBound = konst->nucleusR + konst->maxR;
+  const int iterations = 50;
+
+  auto funcX = [this](float x, float y)->float{ return (float) this->getBin(x, y) * x * x;  };
+  auto funcY = [this](float x, float y)->float{ return (float) this->getBin(x, y) * y * y;  };
+
+  float integral_x = glaub::integral(funcX, lowBound, highBound, iterations);
+  float integral_y = glaub::integral(funcY, lowBound, highBound, iterations);
+
+  return (integral_y - integral_x) / (integral_y + integral_x);
+
+}
 
 //zapis vzdalenosti Nukleonu od jadra do rads.txt (POUZE TESTOVACI)
 void Nucleus::outputRad(){
@@ -415,10 +448,10 @@ void Nucleus::outputNucleons(){
 }
 
 //vypis pocet srazenych Nukleonu, pocet binarnich srazek a srazkovy parametr b do impacts.txt
-void Nucleus::outputImp(float b, float impacts, double M_average, int M, int NA, int NnA, int NB, int NnB){
+void Nucleus::outputImp(float b, float impacts, double M_average, int M, int NA, int NnA, int NB, int NnB, float excentricity){
 
 
-  impactsFile << impacts << " " << this->binImp << " " << b << " " << M_average << " " << M << " " << NA << " " << NnA<< " " << NB << " " << NnB << "\n";
+  impactsFile << impacts << " " << this->binImp << " " << b << " " << M_average << " " << M << " " << NA << " " << NnA<< " " << NB << " " << NnB << " " << excentricity << "\n";
 
 }
 
@@ -443,6 +476,29 @@ void Nucleus::createNucleons(){
 //---------
 //FUNCTIONS
 //---------
+template<typename T>
+float glaub::integral(T&& lambda, float low, float high, int iterations){
+
+  float x = low;
+  float y = low;
+  float jump = (high - low) / (float) iterations;
+  float output = 0;
+
+  for(int i = 0; i < iterations; ++i){
+
+    x = low;
+    for(int j = 0; j < iterations; ++j){
+
+        output += jump * lambda(x, y);
+        x += jump;
+
+    }
+
+    y += jump;
+  }
+
+  return output;
+}
 
 //projdi vzdalenosti vsech Nukleonu a vypis tu nejmensi a nejvetsi (POUZE TESTOVACI)
 void glaub::smallestR(Nucleus * n){
@@ -497,12 +553,13 @@ bool glaub::collide(float R, float alpha){
       if(rn < p){
 
         //pokud se Nukleon jeste nesrazil, pricti pocet srazek do jeho jadra
-        if(!nuc1->nucleons[i]->isImpact){nuc1->imp++;}
-        if(!nuc2->nucleons[j]->isImpact){nuc2->imp++;}
+        if(!nuc1->nucleons[i]->isImpact){++nuc1->imp;}
+        if(!nuc2->nucleons[j]->isImpact){++nuc2->imp;}
 
         nuc1->nucleons[i]->isImpact = true;
         nuc2->nucleons[j]->isImpact = true;
-        nuc1->binImp++; //pricti jadru binarni srazku
+        ++nuc1->nucleons[i]->binImp;
+        ++nuc1->binImp; //pricti jadru binarni srazku
       }
     }
   }
@@ -544,7 +601,7 @@ bool glaub::collide(float R, float alpha){
     }
   }
 
-  nuc1->outputImp(b, impacts, M_average, M, NA, NnA, NB, NnB);  //zapis srazky do impacts.txt
+  nuc1->outputImp(b, impacts, M_average, M, NA, NnA, NB, NnB, nuc1->excentricity());  //zapis srazky do impacts.txt
 
 	//testovací procedury
   //smallestR(nuc1);
